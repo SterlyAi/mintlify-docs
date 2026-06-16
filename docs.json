@@ -119,11 +119,6 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Website",
-          "href": "https://filecheck.io",
-          "icon": "globe"
-        },
-        {
           "anchor": "Demos",
           "href": "https://filecheck.io/demos",
           "icon": "play"
