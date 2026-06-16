@@ -1,0 +1,39 @@
+---
+title: "Events"
+description: "Subscribe to the Element lifecycle: ready, status, facts, ui, error, proof, and destroy."
+---
+
+Subscribe with `intake.on(event, handler)`. It returns an unsubscribe function.
+
+| Event | Fires when | Payload |
+| --- | --- | --- |
+| `ready` | The iframe is ready | `{ ui }` (resolved UI) |
+| `status` | Job state changes | [`IntakeStatusPayload`](/reference/status-payload) |
+| `facts` | File measurements update | [`IntakeFacts`](/reference/facts) |
+| `ui` | UI changes after `update()` | the new UI |
+| `error` | A recoverable iframe error | `{ code, message }` |
+| `proof` | A soft-proof is ready | [`ProofPayload`](/concepts/soft-proofing) |
+| `destroy` | The element unmounts | — |
+
+## Gate on status
+
+The one event you must handle. Gate your submit button on `canProceed`:
+
+```js
+intake.on('status', ({ canProceed, jobId }) => {
+  submitBtn.disabled = !canProceed;
+  hiddenJobIdInput.value = jobId ?? '';
+});
+```
+
+## Drive custom logic with facts
+
+`facts` fires alongside `status` with file measurements (dimensions in millimetres). Use it to drive a price preview or your own controls:
+
+```js
+intake.on('facts', (facts) => {
+  console.log(facts.aggregate.pageCount, facts.aggregate.width);
+});
+```
+
+See [Facts](/reference/facts) for the full shape, or [Connectors](/element/connectors) to map facts onto page controls without custom code.

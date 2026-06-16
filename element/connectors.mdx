@@ -1,0 +1,57 @@
+---
+title: "Connectors"
+description: "Sync file facts (page count, dimensions) onto your product-page controls without custom code."
+---
+
+A **Connector** maps facts Filecheck derives about a file (page count, dimensions, area) onto your product page's own controls (quantity, width, height, size). The merchant authors it in the admin (**Library → Connectors**); you pass it to the Element, which writes the values into the DOM on every status update. No host wiring is required.
+
+Typical uses: set **quantity** from page count (a multi-page PDF means N prints), or fill **width/height** inputs from artwork dimensions (canvas, banner, sticker), with unit conversion.
+
+## Apply a connector
+
+Pass the config inline. The Element resolves each binding and writes it to the first matching control, dispatching `input` and `change` so your framework reacts:
+
+```js
+const intake = fc.elements.create('intake', {
+  workflowId: 'wf_…',
+  connector: {
+    title: 'Canvas size sync',
+    bindings: [
+      { source: 'pageCount', control: 'quantity' },
+      { source: 'width',  control: 'width',  convertTo: 'cm', decimals: 1 },
+      { source: 'height', control: 'height', convertTo: 'cm', decimals: 1 },
+      { source: 'area',   control: 'area',   convertTo: 'cm', round: 'ceil' },
+    ],
+  },
+});
+```
+
+At runtime:
+
+```js
+intake.setConnector(connectorConfig); // re-applies against the last facts
+intake.applyNow();                     // force a re-apply, e.g. after a DOM swap
+```
+
+## Binding shape
+
+<ParamField path="source" type="'pageCount' | 'fileCount' | 'width' | 'height' | 'area'" required />
+<ParamField path="control" type="'quantity' | 'width' | 'height' | 'area'">
+  Auto-fills the built-in preset selectors for common Shopify / WooCommerce / PrestaShop / Magento themes.
+</ParamField>
+<ParamField path="customSelector" type="string">
+  A CSS selector tried first, for theme-specific markup.
+</ParamField>
+<ParamField path="convertFrom / convertTo" type="'mm' | 'cm' | 'in' | 'pt' | number">
+  Dimensional sources are millimetres. For `area`, the factor is squared automatically.
+</ParamField>
+<ParamField path="decimals" type="number" />
+<ParamField path="round" type="'round' | 'floor' | 'ceil'" />
+
+<Note>
+  Plugin authors usually don't build bindings by hand. The connector arrives as JSON from your backend (fetched from Filecheck); pass it straight through as the `connector` option, or resolve it server-side with `connectorId`.
+</Note>
+
+<Tip>
+  When a theme uses non-standard markup, the merchant adds a `customSelector` in the admin. The plugin stays theme-agnostic.
+</Tip>

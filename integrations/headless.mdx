@@ -1,0 +1,50 @@
+---
+title: "Headless & custom platforms"
+description: "Use the Element on any stack, then verify the job server-side with the REST API."
+---
+
+There is no plugin requirement. On any platform, embed the [Element](/element/installation) on the client and verify the result on your server.
+
+## Client
+
+```html
+<script src="https://cdn.filecheck.io/element/v1/filecheck.js"></script>
+<div id="fc-slot"></div>
+<script>
+  const fc = Filecheck('pk_live_…');
+  const intake = fc.elements.create('intake', { workflowId: 'wf_…' });
+  intake.mount('#fc-slot');
+  intake.on('status', ({ canProceed, jobId }) => {
+    submitBtn.disabled = !canProceed;
+    hiddenJobIdInput.value = jobId ?? '';
+  });
+</script>
+```
+
+## Server
+
+1. When `canProceed` is `true`, submit the `jobId` with your form.
+2. Before fulfilling, verify the job with your secret key.
+
+```bash
+curl https://api.filecheck.io/jobs/{jobId} \
+  -H "Authorization: Bearer sk_live_…"
+```
+
+3. Read `files[n].outputRef` to download the fixed file. See [Verify jobs](/server/verify-jobs).
+
+## Multiple elements on one page
+
+Track `canProceed` per element and only enable submit when all pass:
+
+```js
+const states = {};
+function addIntake(workflowId, slotId) {
+  const el = fc.elements.create('intake', { workflowId });
+  el.on('status', ({ canProceed, jobId }) => {
+    states[slotId] = { canProceed, jobId };
+    submitBtn.disabled = !Object.values(states).every(s => s.canProceed);
+  });
+  el.mount('#' + slotId);
+}
+```

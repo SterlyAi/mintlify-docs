@@ -1,0 +1,59 @@
+---
+title: "Presentation & Filecheck.mount"
+description: "Choose inline or dialog presentation, or use Filecheck.mount for zero-JS plugin integration."
+---
+
+## Inline vs dialog
+
+- **`inline`** (default): the widget renders in the page flow where you mount it.
+- **`dialog`**: the widget opens behind a trigger button. Call `intake.focus()` to open it programmatically.
+
+```js
+const intake = fc.elements.create('intake', {
+  workflowId: 'wf_…',
+  presentation: 'dialog'
+});
+intake.mount('#fc-slot');
+```
+
+## Filecheck.mount (zero-JS integration)
+
+For plugins where all configuration is known server-side, `Filecheck.mount` handles mounting, cart-button gating, the proof gallery, and optional CSS/JS injection in a single call. It returns the intake element so you can attach listeners.
+
+```js
+function whenReady(cb, timeout = 10000) {
+  const start = Date.now();
+  (function tick() {
+    if (window.Filecheck && window.Filecheck.mount) return cb();
+    if (Date.now() - start > timeout) return;
+    setTimeout(tick, 50);
+  })();
+}
+
+whenReady(() => {
+  const el = window.Filecheck.mount({
+    publishableKey: 'pk_live_…',
+    workflowId:     'wf_…',
+    presentation:   'inline',       // or 'dialog'
+    mountSelector:  '#fc-slot',     // fallback if #fc-inline is absent
+    connectorId:    'cntr_…',       // optional, fetched server-side
+    cartButtonSelector: '.my-btn',  // optional extra cart selector
+  });
+
+  if (el) {
+    el.on('status', (e) => {
+      document.getElementById('fc_job_id').value = e.jobId || '';
+    });
+  }
+});
+```
+
+### What Filecheck.mount handles for you
+
+- Resolves the mount target (`#fc-inline` → `mountSelector` → next to the cart button).
+- Creates and positions the dialog trigger button when `presentation: 'dialog'`.
+- Gates all cart buttons matching the built-in selectors plus `cartButtonSelector` on `canProceed`.
+- Wires the built-in proof gallery (no host code required).
+- Injects optional `customCss` / `customJs`.
+
+The only thing left to you is platform-specific work, such as writing `jobId` into a hidden field for [server-side verification](/server/verify-jobs).

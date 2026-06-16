@@ -1,0 +1,53 @@
+---
+title: "Installation"
+description: "Load the Filecheck Element from the CDN, handle async loading, and size the mount point."
+---
+
+## Load the script
+
+Load the Element from the CDN. The **pk-specific URL** is preferred because it embeds your tenant config (one fewer request, cached per key):
+
+```html
+<script src="https://cdn.filecheck.io/element/{pk}/filecheck.js" async></script>
+```
+
+Replace `{pk}` with your publishable key, for example `pk_live_abc123`. The generic fallback works but does not embed tenant config:
+
+```html
+<script src="https://cdn.filecheck.io/element/v1/filecheck.js" async></script>
+```
+
+Either URL attaches `window.Filecheck` once loaded.
+
+## Handle async loading
+
+With `async`, `window.Filecheck` is not available immediately. Poll for it before initializing:
+
+```js
+function waitForFilecheck(cb, timeout = 5000) {
+  const start = Date.now();
+  const t = setInterval(() => {
+    if (window.Filecheck) { clearInterval(t); cb(window.Filecheck); }
+    else if (Date.now() - start > timeout) { clearInterval(t); console.error('Filecheck failed to load'); }
+  }, 50);
+}
+
+waitForFilecheck((Filecheck) => {
+  const fc = Filecheck('pk_live_…');
+  const intake = fc.elements.create('intake', { workflowId: 'wf_…' });
+  intake.on('status', ({ canProceed, jobId }) => { /* … */ });
+  intake.mount('#fc-slot');
+});
+```
+
+<Tip>
+  Building a plugin? Use [`Filecheck.mount`](/element/presentation), which handles mounting, cart gating, and the proof gallery for you. Poll for `window.Filecheck && window.Filecheck.mount`.
+</Tip>
+
+## Sizing
+
+The widget self-sizes. Give the mount element a **width** only, never a fixed height. The iframe is wrapped in Shadow DOM, so your CSS does not affect it.
+
+```html
+<div id="fc-slot" style="width: 100%; max-width: 480px;"></div>
+```

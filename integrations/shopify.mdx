@@ -1,0 +1,29 @@
+---
+title: "Shopify"
+description: "Add the Filecheck Element to a Shopify product page with a theme app extension and cart attributes."
+---
+
+## Overview
+
+<Steps>
+  <Step title="Theme app extension block">
+    Drop `<div id="fc-slot">` and the script tag onto the product page. Block settings: `workflowId`, `presentation`. Per-product via the metafield `filecheck.workflowId`.
+  </Step>
+  <Step title="Cart attributes">
+    Write `jobId` to `cart.attributes['Filecheck Job']` via the AJAX Cart API once `canProceed === true`. Disable **Add to cart** client-side until then.
+  </Step>
+  <Step title="Order webhooks">
+    On `orders/paid`, read `note_attributes['Filecheck Job']`, call [`GET /jobs/{id}`](/server/verify-jobs) with your secret key, and attach the output file via the Files API.
+  </Step>
+  <Step title="Embedded admin">
+    Build a Polaris + App Bridge admin for key entry, the workflow picker, default presentation, and the metafield writer.
+  </Step>
+</Steps>
+
+## Connector (optional)
+
+Store the connector JSON in a metafield (`filecheck.connector`) and pass it as the `connector` option to drive quantity and size inputs from [file facts](/element/connectors).
+
+## Billing
+
+Use usage-based billing via the Shopify Billing API (per check).

@@ -1,0 +1,3515 @@
+{
+  "openapi": "3.1.0",
+  "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
+  "info": {
+    "title": "Filecheck API",
+    "version": "1.0.0",
+    "description": "The Filecheck REST API. Submit files as jobs, fetch results, and read your workflows, rules, connectors, profiles, and optimize presets. All requests are authenticated server-side with your secret key (`sk_live_…`)."
+  },
+  "servers": [
+    {
+      "url": "https://api.filecheck.io",
+      "description": "Production"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Jobs",
+      "description": "Submit files for preflight, fixing, optimization, validation, and previews."
+    },
+    {
+      "name": "Uploads",
+      "description": "Mint presigned credentials to upload large files directly."
+    },
+    {
+      "name": "Orders",
+      "description": "Attach jobs to commerce orders."
+    },
+    {
+      "name": "Workflows"
+    },
+    {
+      "name": "Connectors"
+    },
+    {
+      "name": "Rules"
+    },
+    {
+      "name": "Profiles"
+    },
+    {
+      "name": "OptimizePresets"
+    }
+  ],
+  "paths": {
+    "/jobs": {
+      "post": {
+        "tags": [
+          "Jobs"
+        ],
+        "summary": "Submit a job",
+        "description": "Canonical job submission. Each entry in `sources[]` is one source file plus the ordered `steps[]` to run on it. Async (201) by default; set `sync: true` to wait up to ~27s.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JobsPost"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sync completion (sync: true)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Accepted, processing asynchronously",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Sync timed out; still pending",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobPendingResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "A referenced fileRef is not owned by the caller",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Jobs"
+        ],
+        "summary": "List jobs",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "jobs": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Job"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/jobs/{id}": {
+      "get": {
+        "tags": [
+          "Jobs"
+        ],
+        "summary": "Get a job",
+        "description": "Returns the full Job with child Tasks and steps. Use `?expand=runs` for a flattened per-file summary with proof and download URLs.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expand",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "runs"
+              ]
+            },
+            "description": "Set to `runs` to return a flattened per-file summary instead of the full job."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/JobResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/RunsResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Job not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Jobs"
+        ],
+        "summary": "Delete a job",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted"
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Job not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/jobs/preflight": {
+      "post": {
+        "tags": [
+          "Jobs"
+        ],
+        "summary": "Preflight a file",
+        "description": "Sugar wrapper. Runs a preflight-only job. Async (201) by default; `sync: true` waits for the result.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JobsPreflightPost"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sync completion (sync: true)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Accepted, processing asynchronously",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Sync timed out; still pending",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobPendingResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "A referenced fileRef is not owned by the caller",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/jobs/fix": {
+      "post": {
+        "tags": [
+          "Jobs"
+        ],
+        "summary": "Fix a file",
+        "description": "Sugar wrapper for preflight + autofix, plus an optional re-preflight when `repreflight: true`. Async (201) by default.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FixPost"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sync completion (sync: true)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Accepted, processing asynchronously",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Sync timed out; still pending",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobPendingResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "A referenced fileRef is not owned by the caller",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/jobs/optimize": {
+      "post": {
+        "tags": [
+          "Jobs"
+        ],
+        "summary": "Optimize a file",
+        "description": "Sugar wrapper. Runs an optimize-only job. Async (201) by default; `sync: true` waits for the result.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JobsOptimizePost"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sync completion (sync: true)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Accepted, processing asynchronously",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Sync timed out; still pending",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobPendingResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "A referenced fileRef is not owned by the caller",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/jobs/validate": {
+      "post": {
+        "tags": [
+          "Jobs"
+        ],
+        "summary": "Validate a file",
+        "description": "Sugar wrapper. Validates a file against one or more PDF/A or PDF/UA conformance levels. Sync by default; set `async: true` to return 201 immediately.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JobsValidatePost"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sync completion (sync: true)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Accepted, processing asynchronously",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Sync timed out; still pending",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobPendingResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "A referenced fileRef is not owned by the caller",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/jobs/previews": {
+      "post": {
+        "tags": [
+          "Jobs"
+        ],
+        "summary": "Generate previews",
+        "description": "Sugar wrapper. Renders preview images for a file. Async (201) by default; `sync: true` waits for the result.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreviewsPost"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sync completion (sync: true)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Accepted, processing asynchronously",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Sync timed out; still pending",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobPendingResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "A referenced fileRef is not owned by the caller",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uploads": {
+      "post": {
+        "tags": [
+          "Uploads"
+        ],
+        "summary": "Create an upload",
+        "description": "Mints presigned S3 POST credentials so a client can upload a large file directly (up to 500 MB). Returns a `fileRef` usable as a job source. Credentials expire in 300 seconds.",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to create upload credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders/{id}": {
+      "post": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Capture an order",
+        "description": "Records a commerce order and links its line items (and their Filecheck `jobId`s) to the caller. Currently shaped for WooCommerce (`source: \"wp\"`).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Order captured"
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workflows": {
+      "get": {
+        "tags": [
+          "Workflows"
+        ],
+        "summary": "List workflows",
+        "description": "Lists workflows (domain-scoped entries merged with the built-in store catalog). Each item is tagged with a `source` of `domain` or `store`.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "workflows": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Workflow"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workflows/{id}": {
+      "get": {
+        "tags": [
+          "Workflows"
+        ],
+        "summary": "Get a workflow",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "workflow": {
+                      "$ref": "#/components/schemas/Workflow"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/connectors": {
+      "get": {
+        "tags": [
+          "Connectors"
+        ],
+        "summary": "List connectors",
+        "description": "Lists connectors (domain-scoped entries merged with the built-in store catalog). Each item is tagged with a `source` of `domain` or `store`.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "connectors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Connector"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/connectors/{id}": {
+      "get": {
+        "tags": [
+          "Connectors"
+        ],
+        "summary": "Get a connector",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "connector": {
+                      "$ref": "#/components/schemas/Connector"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rules": {
+      "get": {
+        "tags": [
+          "Rules"
+        ],
+        "summary": "List rules",
+        "description": "Lists rules (domain-scoped entries merged with the built-in store catalog). Each item is tagged with a `source` of `domain` or `store`.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "rules": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Rule"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rules/{id}": {
+      "get": {
+        "tags": [
+          "Rules"
+        ],
+        "summary": "Get a rule",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "rule": {
+                      "$ref": "#/components/schemas/Rule"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profiles": {
+      "get": {
+        "tags": [
+          "Profiles"
+        ],
+        "summary": "List profiles",
+        "description": "Lists profiles (domain-scoped entries merged with the built-in store catalog). Each item is tagged with a `source` of `domain` or `store`.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "profiles": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Profile"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profiles/{id}": {
+      "get": {
+        "tags": [
+          "Profiles"
+        ],
+        "summary": "Get a profile",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "profile": {
+                      "$ref": "#/components/schemas/Profile"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/optimize-presets": {
+      "get": {
+        "tags": [
+          "OptimizePresets"
+        ],
+        "summary": "List optimize-presets",
+        "description": "Lists optimize-presets (domain-scoped entries merged with the built-in store catalog). Each item is tagged with a `source` of `domain` or `store`.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "presets": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/OptimizePreset"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/optimize-presets/{id}": {
+      "get": {
+        "tags": [
+          "OptimizePresets"
+        ],
+        "summary": "Get a optimizepreset",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "preset": {
+                      "$ref": "#/components/schemas/OptimizePreset"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Your secret key as a bearer token, e.g. `Authorization: Bearer sk_live_…`. Secret keys are server-side only."
+      }
+    },
+    "schemas": {
+      "JobsPost": {
+        "title": "POST /jobs",
+        "description": "Canonical job submission. Each entry in `sources[]` is a single source file plus the ordered `steps[]` to run on it. Step types compatible with the source's auto-detected fileType are kept; incompatible steps are recorded as `skipped` in the audit log. Async (201) by default; set `sync: true` to wait up to ~27 s for completion (200) or 202 + `pending: true` on timeout. An optional `webhook` is called when the job reaches a terminal status regardless of sync mode.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sources"
+        ],
+        "properties": {
+          "sources": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 50,
+            "items": {
+              "$ref": "#/components/schemas/JobsPost/$defs/sourceObject"
+            },
+            "description": "List of source files to process. Each becomes its own Task under a single Job."
+          },
+          "ruleId": {
+            "type": "string",
+            "description": "Optional Rule id (rule_xxx) recorded on the Job for downstream routing/reporting. Not consumed by the pipeline itself."
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "api",
+              "store",
+              "admin"
+            ],
+            "default": "api"
+          },
+          "customerId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "orderId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "policy": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "onFail": {
+                "type": "string",
+                "enum": [
+                  "reject",
+                  "accept_with_warnings",
+                  "manual_review"
+                ],
+                "default": "reject"
+              }
+            }
+          },
+          "sync": {
+            "type": "boolean",
+            "default": false,
+            "description": "When true, wait up to ~27 s for the job to reach a terminal status. Returns 200 with `{ job }` on completion or 202 with `pending: true` on timeout. Default false (async 201)."
+          },
+          "webhook": {
+            "$ref": "#/components/schemas/JobsPost/$defs/webhook"
+          },
+          "metaData": {
+            "$ref": "#/components/schemas/JobsPost/$defs/metaData"
+          }
+        },
+        "$defs": {
+          "stepType": {
+            "type": "string",
+            "enum": [
+              "preflight",
+              "autofix",
+              "repreflight",
+              "validate",
+              "previews",
+              "optimize",
+              "convert",
+              "upscale",
+              "removebg",
+              "deliver"
+            ]
+          },
+          "step": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "$ref": "#/components/schemas/JobsPost/$defs/stepType"
+              },
+              "params": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "description": "Step-type-specific parameters. Validated by the action Lambda; unknown keys are ignored.",
+                "additionalProperties": true
+              },
+              "label": {
+                "type": "string",
+                "description": "Optional human-friendly label echoed in the audit log."
+              }
+            }
+          },
+          "sourceObject": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "steps"
+            ],
+            "oneOf": [
+              {
+                "required": [
+                  "url"
+                ]
+              },
+              {
+                "required": [
+                  "source"
+                ]
+              },
+              {
+                "required": [
+                  "file"
+                ]
+              },
+              {
+                "required": [
+                  "fileRef"
+                ]
+              }
+            ],
+            "properties": {
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "pattern": "^https?://",
+                "description": "Public or authenticated URL of the file."
+              },
+              "source": {
+                "type": "string",
+                "description": "URL or base64 file contents (alias for url|file)."
+              },
+              "file": {
+                "type": "string",
+                "contentEncoding": "base64",
+                "description": "Inline base64-encoded file contents. String length must be ≤ 9.3 MB. Prefer `url` or `fileRef` for large files."
+              },
+              "fileRef": {
+                "type": "string",
+                "pattern": "^upload_[A-Za-z0-9._-]+$",
+                "description": "Reference id returned by POST /uploads. Use for large files to avoid body-size limits."
+              },
+              "headers": {
+                "type": "object",
+                "description": "Optional HTTP headers sent when fetching the URL (e.g. Authorization).",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "maxProperties": 16
+              },
+              "params": {
+                "type": "object",
+                "description": "Free-form per-source extras carried through to the audit log.",
+                "additionalProperties": true
+              },
+              "steps": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 16,
+                "items": {
+                  "$ref": "#/components/schemas/JobsPost/$defs/step"
+                },
+                "description": "Ordered list of steps to run on this source. Steps execute sequentially; the runner threads a `currentArtifact` reference between steps."
+              },
+              "name": {
+                "type": "string",
+                "description": "Original filename hint (used when `file` is provided)."
+              }
+            }
+          },
+          "webhook": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "url"
+            ],
+            "description": "Endpoint called when the job reaches a terminal status (done | skipped | error). Inspect the separate `outcome` field for the verdict.",
+            "properties": {
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "pattern": "^https?://",
+                "description": "HTTPS endpoint to POST the job result to."
+              },
+              "headers": {
+                "type": "object",
+                "description": "Optional headers sent with the webhook callback (e.g. Authorization).",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "maxProperties": 16
+              }
+            }
+          },
+          "metaData": {
+            "type": "object",
+            "description": "Free-form caller context echoed back on the response and on webhook callbacks. JSON-serialized payload must be ≤ 4 KB.",
+            "additionalProperties": true
+          }
+        }
+      },
+      "JobsPreflightPost": {
+        "title": "POST /jobs/preflight",
+        "description": "Submit one or more files for preflight. By default the response is 201 Accepted and the job runs asynchronously. Set `sync: true` to wait up to ~27 s for the result (200 on completion, 202 + `pending: true` on timeout). An optional `webhook` is called when the job reaches a terminal status regardless of sync mode.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sources"
+        ],
+        "properties": {
+          "sources": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 50,
+            "items": {
+              "$ref": "#/components/schemas/JobsPreflightPost/$defs/sourceObject"
+            },
+            "description": "List of files to preflight. Each becomes its own Task under a single Job. Even a single file must be wrapped in an array."
+          },
+          "sync": {
+            "type": "boolean",
+            "default": false,
+            "description": "When true, the request waits for the job to complete (up to ~27 s). Returns 200 with `{ job }` on success, or 202 with `pending: true` on timeout. The default is false (async 201)."
+          },
+          "webhook": {
+            "$ref": "#/components/schemas/JobsPreflightPost/$defs/webhook"
+          },
+          "metaData": {
+            "$ref": "#/components/schemas/JobsPreflightPost/$defs/metaData"
+          }
+        },
+        "$defs": {
+          "sourceObject": {
+            "type": "object",
+            "additionalProperties": false,
+            "oneOf": [
+              {
+                "required": [
+                  "url"
+                ]
+              },
+              {
+                "required": [
+                  "file"
+                ]
+              },
+              {
+                "required": [
+                  "fileRef"
+                ]
+              }
+            ],
+            "properties": {
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "pattern": "^https?://",
+                "description": "Public or authenticated URL of the file."
+              },
+              "file": {
+                "type": "string",
+                "contentEncoding": "base64",
+                "description": "Inline base64-encoded file contents. String length must be ≤ 9.3 MB (the ~7 MB decoded equivalent). Prefer `url` or `fileRef` for large files."
+              },
+              "fileRef": {
+                "type": "string",
+                "pattern": "^upload_[A-Za-z0-9._-]+$",
+                "description": "Reference id returned by POST /uploads. Use for large files to avoid body-size limits."
+              },
+              "headers": {
+                "type": "object",
+                "description": "Optional HTTP headers sent when fetching the URL (e.g. Authorization).",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "maxProperties": 16
+              },
+              "profileId": {
+                "type": "string",
+                "description": "Optional preflight profile id for a specific preflight profile (yours, or a published `preflight_standard_*`). Omit to run every check we cover for the file's kind."
+              },
+              "name": {
+                "type": "string",
+                "description": "Original filename hint (used when `file` is provided)."
+              }
+            }
+          },
+          "webhook": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "url"
+            ],
+            "description": "Endpoint called when the job reaches a terminal status (done | skipped | error). Inspect the separate `outcome` field for the verdict.",
+            "properties": {
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "pattern": "^https?://",
+                "description": "HTTPS endpoint to POST the job result to."
+              },
+              "headers": {
+                "type": "object",
+                "description": "Optional headers sent with the webhook callback (e.g. Authorization).",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "maxProperties": 16
+              }
+            }
+          },
+          "metaData": {
+            "type": "object",
+            "description": "Free-form caller context echoed back on the response and on webhook callbacks. JSON-serialized payload must be ≤ 4 KB.",
+            "additionalProperties": true
+          }
+        }
+      },
+      "JobsOptimizePost": {
+        "title": "POST /jobs/optimize",
+        "description": "Optimize one or more files. Each source carries its own `params`, namespaced by file type: `params.pdf` for PDFs (DynaPDF pipeline) and `params.raster` for bitmaps (Sharp + fal.ai pipeline). Exactly one namespace per source is consumed — the server picks based on the detected file type. Mixed batches (PDF + raster in the same request) are supported. The request is synchronous by default — the response is 200 with `{ job }` on completion, or 202 with `pending: true` if the job does not finish within ~27 s. An optional `webhook` is called when the job reaches a terminal status.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sources"
+        ],
+        "properties": {
+          "sources": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 50,
+            "items": {
+              "$ref": "#/components/schemas/JobsOptimizePost/$defs/sourceObject"
+            },
+            "description": "List of files to optimize. Each item may include a `params` object describing which optimizations to apply. Even a single file must be wrapped in an array."
+          },
+          "async": {
+            "type": "boolean",
+            "default": false,
+            "description": "When true, return 201 immediately with `{ job, pending: true }` and let the webhook (if any) deliver the terminal result. When false (default), the request is synchronous — 200 on completion, or 202 with `pending: true` if the job does not finish within ~27 s."
+          },
+          "webhook": {
+            "$ref": "#/components/schemas/JobsOptimizePost/$defs/webhook"
+          },
+          "metaData": {
+            "$ref": "#/components/schemas/JobsOptimizePost/$defs/metaData"
+          }
+        },
+        "$defs": {
+          "source": {
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "uri",
+                "pattern": "^https?://",
+                "description": "Public or authenticated URL of the file."
+              },
+              {
+                "$ref": "#/components/schemas/JobsOptimizePost/$defs/sourceObject"
+              }
+            ]
+          },
+          "sourceObject": {
+            "type": "object",
+            "additionalProperties": false,
+            "oneOf": [
+              {
+                "required": [
+                  "url"
+                ]
+              },
+              {
+                "required": [
+                  "file"
+                ]
+              },
+              {
+                "required": [
+                  "fileRef"
+                ]
+              }
+            ],
+            "properties": {
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "pattern": "^https?://",
+                "description": "Public or authenticated URL of the file."
+              },
+              "file": {
+                "type": "string",
+                "contentEncoding": "base64",
+                "description": "Inline base64-encoded file contents. String length must be ≤ 9.3 MB (the ~7 MB decoded equivalent). Prefer `url` or `fileRef` for large files."
+              },
+              "fileRef": {
+                "type": "string",
+                "pattern": "^upload_[A-Za-z0-9._-]+$",
+                "description": "Reference id returned by POST /uploads. Use for large files to avoid body-size limits."
+              },
+              "headers": {
+                "type": "object",
+                "description": "Optional HTTP headers sent when fetching the URL (e.g. Authorization).",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "maxProperties": 16
+              },
+              "name": {
+                "type": "string",
+                "description": "Original filename hint (used when `file` is provided)."
+              },
+              "mimeType": {
+                "type": "string",
+                "description": "MIME type hint (e.g. application/pdf)."
+              },
+              "params": {
+                "$ref": "#/components/schemas/JobsOptimizePost/$defs/optimizeParams"
+              }
+            }
+          },
+          "optimizeParams": {
+            "type": "object",
+            "additionalProperties": false,
+            "minProperties": 1,
+            "description": "Per-source optimization options, namespaced by file type. Exactly one of `pdf` / `raster` is consumed per source — the server selects the namespace matching the detected file type. Future file types (e.g. `vector`) will slot in alongside. An empty object is invalid; omit `params` entirely if no options are needed.",
+            "properties": {
+              "pdf": {
+                "$ref": "#/components/schemas/JobsOptimizePost/$defs/pdfOptimizeParams"
+              },
+              "raster": {
+                "$ref": "#/components/schemas/JobsOptimizePost/$defs/rasterOptimizeParams"
+              }
+            }
+          },
+          "pdfOptimizeParams": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "PDF optimization options applied via DynaPDF. All fields are optional; an empty object performs a stream-rebuild only (still typically reduces size). Options may interact: see the `dependsOn` notes per field.",
+            "properties": {
+              "scaleImages": {
+                "$ref": "#/components/schemas/JobsOptimizePost/$defs/scaleImages"
+              },
+              "compression": {
+                "$ref": "#/components/schemas/JobsOptimizePost/$defs/compression"
+              },
+              "colorConversion": {
+                "$ref": "#/components/schemas/JobsOptimizePost/$defs/colorConversion"
+              },
+              "grayTo1Bit": {
+                "$ref": "#/components/schemas/JobsOptimizePost/$defs/grayTo1Bit"
+              },
+              "textToOutlines": {
+                "$ref": "#/components/schemas/JobsOptimizePost/$defs/textToOutlines"
+              },
+              "flattenLayers": {
+                "type": "boolean",
+                "default": false,
+                "description": "Flatten optional content groups (layers) into a single visible layer."
+              },
+              "hairlines": {
+                "$ref": "#/components/schemas/JobsOptimizePost/$defs/hairlines"
+              },
+              "strip": {
+                "$ref": "#/components/schemas/JobsOptimizePost/$defs/strip"
+              },
+              "boundingBoxes": {
+                "$ref": "#/components/schemas/JobsOptimizePost/$defs/boundingBoxes"
+              },
+              "pageResize": {
+                "$ref": "#/components/schemas/JobsOptimizePost/$defs/pageResize"
+              },
+              "outputIntent": {
+                "$ref": "#/components/schemas/JobsOptimizePost/$defs/outputIntent"
+              },
+              "snapRichBlack": {
+                "$ref": "#/components/schemas/JobsOptimizePost/$defs/snapRichBlack"
+              }
+            }
+          },
+          "rasterOptimizeParams": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Raster optimization options application. Pipeline order is fixed: removeBg → upscale → crop → grayscale → colorspace → flatten → resize → embedIcc → convert. All fields are optional; an empty object is a no-op transcode of the source format.",
+            "properties": {
+              "removeBg": {
+                "$ref": "#/components/schemas/JobsOptimizePost/$defs/rasterRemoveBg"
+              },
+              "upscale": {
+                "$ref": "#/components/schemas/JobsOptimizePost/$defs/rasterUpscale"
+              },
+              "crop": {
+                "$ref": "#/components/schemas/JobsOptimizePost/$defs/rasterCrop"
+              },
+              "grayscale": {
+                "$ref": "#/components/schemas/JobsOptimizePost/$defs/rasterGrayscale"
+              },
+              "colorspace": {
+                "$ref": "#/components/schemas/JobsOptimizePost/$defs/rasterColorspace"
+              },
+              "flatten": {
+                "$ref": "#/components/schemas/JobsOptimizePost/$defs/rasterFlatten"
+              },
+              "resize": {
+                "$ref": "#/components/schemas/JobsOptimizePost/$defs/rasterResize"
+              },
+              "embedIcc": {
+                "$ref": "#/components/schemas/JobsOptimizePost/$defs/rasterEmbedIcc"
+              },
+              "convert": {
+                "$ref": "#/components/schemas/JobsOptimizePost/$defs/rasterConvert"
+              },
+              "bitDepth": {
+                "$ref": "#/components/schemas/JobsOptimizePost/$defs/rasterBitDepth"
+              }
+            }
+          },
+          "rasterRemoveBg": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "enabled"
+            ],
+            "description": "AI background removal. Produces an RGBA result with the background pixels turned transparent. Combine with `flatten` to composite onto a solid color, or with `convert: { format:'png' }` to preserve transparency.",
+            "properties": {
+              "enabled": {
+                "type": "boolean",
+                "description": "Set true to run the BiRefNet model."
+              }
+            }
+          },
+          "rasterUpscale": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "AI upscale. The scale factor is derived in this order: (a) explicit `scale`; (b) `target_width_px` and/or `target_height_px` → scale per axis = `target_px / source_px` (no `minDpi` required); (c) `minDpi` + `target_width_mm` and/or `target_height_mm` → required pixels per axis = `minDpi * mm / 25.4`; final scale = max of per-axis required scales so both dimensions meet the floor; (d) `minDpi` alone + the image's embedded DPI tag → `minDpi / density`. If none of these apply the op is skipped (`reason: 'no_dpi_basis'`). If the computed scale is ≤ 1 the image already meets the floor and the op is skipped (`reason: 'already_at_dpi'`). Capped at 4× to bound cost and latency. When `minDpi` is supplied the encoded output is tagged with that density via Sharp `withMetadata`, regardless of whether the upscale itself ran.",
+            "properties": {
+              "minDpi": {
+                "type": "number",
+                "minimum": 1,
+                "description": "Minimum effective DPI the upscaled image must hit. Primary driver — most callers should set this and let the runtime work out the scale from `target_width_mm` or the source's tagged DPI. Also written to the output's density metadata."
+              },
+              "target_width_mm": {
+                "type": "number",
+                "minimum": 1,
+                "description": "Target horizontal print size in millimetres. Combined with `minDpi` to compute the required pixel width: `ceil(minDpi * target_width_mm / 25.4)`."
+              },
+              "target_height_mm": {
+                "type": "number",
+                "minimum": 1,
+                "description": "Target vertical print size in millimetres. Combined with `minDpi` to compute the required pixel height: `ceil(minDpi * target_height_mm / 25.4)`. May be supplied alongside `target_width_mm`; the larger required scale wins."
+              },
+              "target_width_px": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Target horizontal pixel count. Direct pixel target — does not require `minDpi`. May be combined with `target_height_px`; the larger required scale wins. Takes precedence over the mm-based path."
+              },
+              "target_height_px": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Target vertical pixel count. Direct pixel target — does not require `minDpi`. May be combined with `target_width_px`; the larger required scale wins. Takes precedence over the mm-based path."
+              },
+              "scale": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 4,
+                "description": "Explicit scale factor. Only useful when the caller knows the source pixel dimensions — most printers should rely on `minDpi` instead."
+              }
+            }
+          },
+          "rasterCrop": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "ratios"
+            ],
+            "description": "Centered crop to one of a set of allowed aspect ratios. The runtime picks the allowed ratio (or its inverse, for portrait/landscape match) closest to the source's current ratio. No-op when the source already matches within `tolerance`.",
+            "properties": {
+              "ratios": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    },
+                    {
+                      "type": "string",
+                      "pattern": "^\\d+(?:\\.\\d+)?[:/x]\\d+(?:\\.\\d+)?$"
+                    }
+                  ]
+                },
+                "description": "Allowed aspect ratios. Strings may use `:`, `/` or `x` (e.g. `\"4:3\"`, `\"16/9\"`); numbers are treated as width÷height."
+              },
+              "tolerance": {
+                "type": "number",
+                "minimum": 0,
+                "default": 0.02,
+                "description": "Allowed deviation between source ratio and target before cropping."
+              }
+            }
+          },
+          "rasterGrayscale": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "enabled"
+            ],
+            "description": "Convert to grayscale. Independent of `colorspace`: use this for the simple 'desaturate' case; use `colorspace: { target:'grayscale' }` when you also need ICC handling.",
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              }
+            }
+          },
+          "rasterColorspace": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "target"
+            ],
+            "description": "Convert the working colorspace. When `iccAlias` is supplied the destination ICC is also embedded in the output (otherwise Sharp's untagged colour transform is used).",
+            "properties": {
+              "target": {
+                "type": "string",
+                "enum": [
+                  "cmyk",
+                  "grayscale",
+                  "rgb"
+                ],
+                "description": "Destination colorspace."
+              },
+              "iccAlias": {
+                "type": "string",
+                "description": "Bundled ICC alias (e.g. `fogra39`, `swop`, `apple-rgb`) or a .icc filename present in the raster Lambda's profiles directory."
+              }
+            }
+          },
+          "rasterFlatten": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "background"
+            ],
+            "description": "Composite a transparent image onto a solid colour, dropping the alpha channel.",
+            "properties": {
+              "background": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$",
+                "description": "Flatten target colour, #rrggbb."
+              }
+            }
+          },
+          "rasterResize": {
+            "type": "object",
+            "additionalProperties": false,
+            "minProperties": 1,
+            "description": "Pixel-dimension resize. The runtime applies the constraint that bounds the image — `maxWidth`/`maxHeight` shrink oversized images, `minWidth`/`minHeight` enlarge undersized ones. Aspect ratio is preserved by default (`fit: 'inside'`).",
+            "properties": {
+              "minWidth": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "minHeight": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "maxWidth": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "maxHeight": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "fit": {
+                "type": "string",
+                "enum": [
+                  "inside",
+                  "outside",
+                  "cover",
+                  "contain",
+                  "fill"
+                ],
+                "default": "inside"
+              }
+            }
+          },
+          "rasterEmbedIcc": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "alias"
+            ],
+            "description": "Embed an ICC profile in the output without changing pixel values. Use `colorspace.iccAlias` if you also need the conversion.",
+            "properties": {
+              "alias": {
+                "type": "string",
+                "description": "Bundled ICC alias or .icc filename."
+              }
+            }
+          },
+          "rasterConvert": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "format"
+            ],
+            "description": "Re-encode to a different format. Output mime type and extension are inferred from the target format.",
+            "properties": {
+              "format": {
+                "type": "string",
+                "enum": [
+                  "jpeg",
+                  "jpg",
+                  "png",
+                  "tiff",
+                  "tif",
+                  "webp"
+                ]
+              }
+            }
+          },
+          "rasterBitDepth": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "min"
+            ],
+            "description": "Requested minimum bits-per-channel. Informational at the pipeline layer — actual depth is determined by the chosen encoder/colourspace.",
+            "properties": {
+              "min": {
+                "type": "integer",
+                "enum": [
+                  1,
+                  4,
+                  8,
+                  16
+                ]
+              }
+            }
+          },
+          "snapRichBlack": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "enabled"
+            ],
+            "description": "Rewrite every DeviceCMYK fill or stroke whose C, M and Y channels all reach `threshold` to pure K (0, 0, 0, 1). Runs in a separate pikepdf pre-optimize pass before the DynaPDF pipeline so other colors (brand spots, photos, ICC-tagged values, Separation / DeviceN) pass through untouched. Only the `k` / `K` shortcut ops and `scn` / `SCN` under an explicit `cs` / `CS DeviceCMYK` are rewritten.",
+            "properties": {
+              "enabled": {
+                "type": "boolean",
+                "description": "Set true to run the rich-black snap pre-optimize pass."
+              },
+              "threshold": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "default": 0.85,
+                "description": "Minimum component value (0–1) on C, M AND Y for a CMYK color to be classified as rich black. Default 0.85 matches the preflight detector."
+              }
+            }
+          },
+          "outputIntent": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "profile"
+            ],
+            "description": "Embed an ICC profile as the document's output intent. Used by prepress workflows to declare the intended printing condition. The profile is referenced either by alias (mapped to a bundled ICC in the repairs Lambda — e.g. 'fogra39', 'swop', 'pso-coated') or by absolute path to a .icc file. Applied at the end of optimize, immediately before save.",
+            "properties": {
+              "profile": {
+                "type": "string",
+                "description": "ICC profile alias or absolute path to a .icc file."
+              },
+              "registry": {
+                "type": "string",
+                "default": "http://www.color.org",
+                "description": "Registry URL for the output condition. Informational."
+              }
+            }
+          },
+          "boundingBoxes": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 5000,
+            "description": "Set one or more page bounding boxes (media / crop / bleed / trim / art) before optimization. Each entry targets a single box on a single page (or all pages when `page` is omitted). Coordinates are in PDF user units (1 pt = 1/72 inch) and follow Filecheck's `SetBBox` convention: `(leftX, leftY)` is the lower-left corner, `(rightX, rightY)` is the upper-right. The media box is required by PDF and cannot be deleted; if any other box is set with a width below 1 unit Filecheck will delete that box from the page. Min page size 3x3, max 14400x14400.",
+            "items": {
+              "$ref": "#/components/schemas/JobsOptimizePost/$defs/boundingBox"
+            }
+          },
+          "boundingBox": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/JobsOptimizePost/$defs/boundingBoxExplicit"
+              },
+              {
+                "$ref": "#/components/schemas/JobsOptimizePost/$defs/boundingBoxSourceRelative"
+              }
+            ]
+          },
+          "boundingBoxExplicit": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "box",
+              "leftX",
+              "leftY",
+              "rightX",
+              "rightY"
+            ],
+            "properties": {
+              "box": {
+                "type": "string",
+                "enum": [
+                  "media",
+                  "crop",
+                  "bleed",
+                  "trim",
+                  "art"
+                ],
+                "description": "Which page boundary to set."
+              },
+              "page": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "1-based page number. Omit to apply this box to every page."
+              },
+              "leftX": {
+                "type": "number",
+                "description": "Lower-left X in PDF user units."
+              },
+              "leftY": {
+                "type": "number",
+                "description": "Lower-left Y in PDF user units."
+              },
+              "rightX": {
+                "type": "number",
+                "description": "Upper-right X in PDF user units."
+              },
+              "rightY": {
+                "type": "number",
+                "description": "Upper-right Y in PDF user units."
+              }
+            }
+          },
+          "boundingBoxSourceRelative": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "box",
+              "source"
+            ],
+            "description": "Set a bounding box derived from another box on the SAME source page. Resolved per page against the source PDF before import. Used by autofix to e.g. set trim=media (when trim is missing) or bleed=trim±3pt (when bleed is required by the print profile). Coordinates are computed points (1 pt = 1/72 inch); when pageResize is also active the source rect is translated by the source media origin and multiplied by the resize scale before `expand` is applied.",
+            "properties": {
+              "box": {
+                "type": "string",
+                "enum": [
+                  "media",
+                  "crop",
+                  "bleed",
+                  "trim",
+                  "art"
+                ],
+                "description": "Which page boundary to set."
+              },
+              "source": {
+                "type": "string",
+                "enum": [
+                  "media",
+                  "crop",
+                  "bleed",
+                  "trim",
+                  "art"
+                ],
+                "description": "Which source page boundary to derive from. WARNING: the source box must actually be present in the PDF — if it is absent the operation throws and the job fails. `media` is the only box guaranteed to exist in every PDF. Prefer `source: \"media\"` unless you have verified the source PDF contains the referenced box (e.g. via a prior preflight check)."
+              },
+              "expand": {
+                "type": "number",
+                "default": 0,
+                "description": "Points to grow (positive) or shrink (negative) the resolved rect outward on all four sides. (1 pt = 1/72 inch)"
+              },
+              "page": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "1-based source page. Omit to apply to every page."
+              }
+            }
+          },
+          "pageResize": {
+            "type": "object",
+            "additionalProperties": false,
+            "minProperties": 1,
+            "description": "Resize all pages during import. Supply EITHER explicit `scaleX`/`scaleY` factors, OR a target `width`+`height` in PDF user units (pt), OR a named `format`. A single uniform scale is computed from page 1 of the source and applied document-wide (Filecheck's import-time scaling is whole-document); each output page's media box is then independently set to its own (sourceDims x scale) when only direct factors are given, or to the exact target rectangle when a size-based target is used.",
+            "properties": {
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "scale",
+                  "stretch"
+                ],
+                "default": "scale",
+                "description": "How to fit content to a size target. `scale` (default) applies the same factor to both axes so the source fits inside the target without distortion (may leave blank margins). `stretch` uses independent X/Y factors to exactly hit the target (may distort). Ignored when only `scaleX`/`scaleY` are supplied."
+              },
+              "scaleX": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "description": "Horizontal scale factor (1.0 = no change). Used only when no size target (`width`/`height`/`format`) is supplied."
+              },
+              "scaleY": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "description": "Vertical scale factor (defaults to `scaleX` if omitted). Used only when no size target is supplied."
+              },
+              "width": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "description": "Target page width in PDF user units (1 pt = 1/72 inch). Requires `height` as well."
+              },
+              "height": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "description": "Target page height in PDF user units. Requires `width` as well."
+              },
+              "format": {
+                "type": "string",
+                "enum": [
+                  "A3",
+                  "A4",
+                  "A5",
+                  "Letter",
+                  "Legal",
+                  "Tabloid"
+                ],
+                "description": "Named paper format. Resolved against `orientation`. Mutually exclusive with `width`/`height`."
+              },
+              "orientation": {
+                "type": "string",
+                "enum": [
+                  "portrait",
+                  "landscape"
+                ],
+                "default": "portrait",
+                "description": "Orientation for `format`. Ignored otherwise."
+              }
+            }
+          },
+          "hairlines": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "minWidth"
+            ],
+            "description": "Increase the width of thin lines that would otherwise drop out or render inconsistently on press. Critical for offset / flexo / large-format output where 0-width or sub-pixel strokes are unsafe.",
+            "properties": {
+              "minWidth": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 10,
+                "description": "Minimum stroke width in points (1 pt = 1/72 inch). Lines thinner than this are widened to this value. Common values: 0.25 (~0.09 mm) for sheetfed offset, 0.5 (~0.18 mm) for flexo, 0.75-1.0 for large-format / screen printing."
+              },
+              "ignoreZeroWidth": {
+                "type": "boolean",
+                "default": false,
+                "description": "Leave PDF zero-width strokes (`0 w`, render as one device pixel) unchanged. Off by default — zero-width strokes are the most common hairline-rendering hazard."
+              },
+              "zeroWidthOnly": {
+                "type": "boolean",
+                "default": false,
+                "description": "Only widen real zero-width strokes (`0 w`); leave all other thin-but-nonzero strokes alone. Use when designers intentionally specified narrow strokes you don't want altered."
+              }
+            }
+          },
+          "scaleImages": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Downsample raster images that exceed the target resolution. Activated when `targetRes` is present — no `enabled` flag needed.",
+            "required": [
+              "targetRes"
+            ],
+            "properties": {
+              "skipMasked": {
+                "type": "boolean",
+                "default": false,
+                "description": "Skip images that have a color mask."
+              },
+              "skipSizeCheck": {
+                "type": "boolean",
+                "default": false,
+                "description": "Always write the downsampled image even if the result would be larger than the original."
+              },
+              "minRes": {
+                "type": "object",
+                "additionalProperties": false,
+                "description": "Resolution threshold (DPI). Images at or below this resolution are not scaled. Optional — if omitted per channel, defaults to targetRes + 1 (i.e. only images strictly above the target are touched).",
+                "properties": {
+                  "bw": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1200,
+                    "description": "Threshold for 1-bit black & white images."
+                  },
+                  "gray": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1200,
+                    "description": "Threshold for grayscale images."
+                  },
+                  "color": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1200,
+                    "description": "Threshold for multi-channel (color) images."
+                  }
+                }
+              },
+              "targetRes": {
+                "type": "object",
+                "additionalProperties": false,
+                "description": "Target resolution (DPI) to downsample to.",
+                "properties": {
+                  "bw": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1200,
+                    "description": "Target DPI for 1-bit black & white images."
+                  },
+                  "gray": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1200,
+                    "description": "Target DPI for grayscale images."
+                  },
+                  "color": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1200,
+                    "description": "Target DPI for multi-channel (color) images."
+                  }
+                }
+              }
+            }
+          },
+          "compression": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Image compression filters and quality. Filter codes: `flate` (lossless, default for line art), `jpeg` (lossy, photos), `jpeg2000` (lossy, slow), `ccitt4` (lossless, 1-bit fax), `jbig2` (lossless/lossy, 1-bit, best for scanned text).",
+            "properties": {
+              "bwFilter": {
+                "type": "string",
+                "enum": [
+                  "flate",
+                  "ccitt3",
+                  "ccitt4",
+                  "jbig2",
+                  "lzw",
+                  "runlength"
+                ],
+                "description": "Compression filter for 1-bit black & white images."
+              },
+              "grayFilter": {
+                "type": "string",
+                "enum": [
+                  "flate",
+                  "jpeg",
+                  "jpeg2000",
+                  "lzw"
+                ],
+                "description": "Compression filter for grayscale images."
+              },
+              "colorFilter": {
+                "type": "string",
+                "enum": [
+                  "flate",
+                  "jpeg",
+                  "jpeg2000",
+                  "lzw"
+                ],
+                "description": "Compression filter for multi-channel (color) images."
+              },
+              "jpegQuality": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100,
+                "description": "JPEG quality (1 = smallest, 100 = best). Typical: 75–85."
+              },
+              "jpeg2000Quality": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100,
+                "description": "JPEG 2000 quality (1 = smallest, 100 = best). Typical: 75–85."
+              },
+              "use1BitJBIG2": {
+                "type": "boolean",
+                "default": false,
+                "description": "Recompress 1-bit images with JBIG2 (very strong for scanned text). Skips images already JBIG2-encoded."
+              },
+              "recompressJBIG2": {
+                "type": "boolean",
+                "default": false,
+                "description": "Force re-encode of 1-bit images even if already JBIG2-encoded. Only meaningful if `use1BitJBIG2` is true."
+              }
+            }
+          },
+          "colorConversion": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Convert images, text and vector graphics to a single device color space. To convert images as well, the `ConvertAllColors` flag is required (set via `convertSpecialSpaces`) — otherwise only text and vectors are converted. Critical for print workflows that require a specific output color space (e.g. CMYK or grayscale) and for RGB files that contain a mix of embedded-color and device-color content (e.g. RGB images but CMYK vectors).",
+            "required": [
+              "target"
+            ],
+            "properties": {
+              "target": {
+                "type": "string",
+                "enum": [
+                  "gray",
+                  "rgb",
+                  "cmyk"
+                ],
+                "description": "Target device color space."
+              },
+              "convertSpecialSpaces": {
+                "type": "boolean",
+                "default": true,
+                "description": "Also convert Separation, DeviceN and NChannel color spaces. Enabling this will force image conversions for images that do have special color spaces."
+              },
+              "preserve": {
+                "type": "array",
+                "uniqueItems": true,
+                "description": "Color-space families to leave unchanged when converting. Critical for prepress: `separation` keeps spot inks (Pantone, varnish, white, metallics), `deviceN` / `nchannel` keep multi-ink builds, `icc` keeps calibrated profiles untouched, `separationAll` keeps the special `All` separation (used for registration / die marks).",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "icc",
+                    "separation",
+                    "separationAll",
+                    "deviceN",
+                    "nchannel"
+                  ]
+                }
+              },
+              "excludeColorSpaces": {
+                "type": "array",
+                "uniqueItems": true,
+                "maxItems": 256,
+                "description": "Named color spaces (typically spot ink names like `PANTONE 185 C`, `Cutter`, `White`, `Varnish`) to exclude from conversion. Match is case-insensitive against the color-space name as declared in the PDF.",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                }
+              },
+              "excludeMode": {
+                "type": "string",
+                "enum": [
+                  "exclude",
+                  "only"
+                ],
+                "default": "exclude",
+                "description": "Interpretation of `excludeColorSpaces`: `exclude` (default) skips the listed spaces and converts everything else; `only` does the inverse — converts only the listed spaces and leaves all others alone. Useful for one-off normalizations (e.g. convert a single rogue RGB spot back to CMYK)."
+              },
+              "replaceJpeg2000WithJpeg": {
+                "type": "boolean",
+                "default": true,
+                "description": "Recompress converted JPEG 2000 images with JPEG (~10× faster, near-identical quality)."
+              },
+              "onOverprint": {
+                "type": "string",
+                "enum": [
+                  "fail",
+                  "skip",
+                  "convert"
+                ],
+                "default": "fail",
+                "description": "Behavior when a page contains overprinted objects: `fail` aborts the job (safest for print-critical files — color appearance can change unpredictably), `skip` leaves overprinted objects in their original space, `convert` converts everything anyway (may shift colors on press)."
+              }
+            }
+          },
+          "grayTo1Bit": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Convert grayscale images to 1-bit black & white. Useful for scanned faxes that came in as gray.",
+            "properties": {
+              "enabled": {
+                "type": "boolean",
+                "default": false,
+                "description": "Enable gray → 1-bit conversion."
+              },
+              "useOtsuFilter": {
+                "type": "boolean",
+                "default": false,
+                "description": "Use the Otsu threshold algorithm (better for scanned content). Only meaningful if `enabled` is true."
+              }
+            }
+          },
+          "textToOutlines": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Convert text into vector outlines. The result has no extractable/searchable text.",
+            "properties": {
+              "enabled": {
+                "type": "boolean",
+                "default": false,
+                "description": "Enable text-to-outlines conversion."
+              },
+              "nonEmbeddedOnly": {
+                "type": "boolean",
+                "default": false,
+                "description": "Outline only text in non-embedded fonts (preserves searchability where the font is embedded). Only meaningful if `enabled` is true."
+              }
+            }
+          },
+          "strip": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Remove non-essential objects to reduce file size.",
+            "properties": {
+              "thumbnails": {
+                "type": "boolean",
+                "default": false,
+                "description": "Remove embedded page thumbnails (viewers regenerate on demand)."
+              },
+              "alternateImages": {
+                "type": "boolean",
+                "default": false,
+                "description": "Remove alternate (low-res preview) image variants."
+              },
+              "privateData": {
+                "type": "boolean",
+                "default": false,
+                "description": "Remove application-private data from pages, templates and images."
+              },
+              "invisiblePaths": {
+                "type": "boolean",
+                "default": false,
+                "description": "Remove vector paths that produce no visible output (`n` operator)."
+              },
+              "batesNumbers": {
+                "type": "boolean",
+                "default": false,
+                "description": "Remove Bates numbering and any associated headers/footers."
+              },
+              "headerFooter": {
+                "type": "boolean",
+                "default": false,
+                "description": "Remove headers and footers that were not added as Bates numbers."
+              },
+              "annotations": {
+                "type": "boolean",
+                "default": false,
+                "description": "Skip all annotations at import (text notes, sticky notes, links, stamps, etc.). Signature widgets live under `formFields`; remove those via the dedicated decrypt pass."
+              },
+              "formFields": {
+                "type": "boolean",
+                "default": false,
+                "description": "Skip the interactive form (AcroForm + XFA) at import. Covers form fields, NeedAppearances, and any embedded XFA payload."
+              },
+              "attachments": {
+                "type": "boolean",
+                "default": false,
+                "description": "Skip file attachments / embedded files at import."
+              },
+              "javascript": {
+                "type": "boolean",
+                "default": false,
+                "description": "Skip document-level JavaScript and JavaScript actions at import."
+              },
+              "bookmarks": {
+                "type": "boolean",
+                "default": false,
+                "description": "Skip the document outline (bookmarks) at import."
+              }
+            }
+          },
+          "webhook": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "url"
+            ],
+            "description": "Endpoint called when the job reaches a terminal status (done | skipped | error). Inspect the separate `outcome` field for the verdict.",
+            "properties": {
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "pattern": "^https?://",
+                "description": "HTTPS endpoint to POST the job result to."
+              },
+              "headers": {
+                "type": "object",
+                "description": "Optional headers sent with the webhook callback (e.g. Authorization).",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "maxProperties": 16
+              }
+            }
+          },
+          "metaData": {
+            "type": "object",
+            "description": "Free-form caller context echoed back on the response and on webhook callbacks. JSON-serialized payload must be ≤ 4 KB.",
+            "additionalProperties": true
+          }
+        }
+      },
+      "JobsValidatePost": {
+        "title": "POST /jobs/validate",
+        "description": "Validate one or more files against PDF/A or PDF/UA conformance levels. Each source carries its own `profile` (one or more codes). The request is synchronous by default — the response is 200 with `{ job }` on completion, or 202 with `pending: true` if the job does not finish within ~27 s. An optional `webhook` is called when the job reaches a terminal status.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sources"
+        ],
+        "properties": {
+          "sources": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 50,
+            "items": {
+              "$ref": "#/components/schemas/JobsValidatePost/$defs/sourceObject"
+            },
+            "description": "List of files to validate. Each item must include a `profile` field. Even a single file must be wrapped in an array."
+          },
+          "async": {
+            "type": "boolean",
+            "default": false,
+            "description": "When true, return 201 immediately with `{ job, pending: true }` and let the webhook (if any) deliver the terminal result. When false (default), the request is synchronous — 200 on completion, or 202 with `pending: true` if the job does not finish within ~27 s."
+          },
+          "webhook": {
+            "$ref": "#/components/schemas/JobsValidatePost/$defs/webhook"
+          },
+          "metaData": {
+            "$ref": "#/components/schemas/JobsValidatePost/$defs/metaData"
+          }
+        },
+        "$defs": {
+          "profileCode": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "1a",
+              "1b",
+              "2a",
+              "2b",
+              "2u",
+              "3a",
+              "3b",
+              "3u",
+              "4",
+              "4e",
+              "4f",
+              "ua1",
+              "ua2"
+            ],
+            "description": "PDF/A or PDF/UA conformance level code, or 'auto' to let the validator infer the closest matching profile from the file itself. PDF/A: 1a 1b 2a 2b 2u 3a 3b 3u 4 4e 4f. PDF/UA: ua1 ua2."
+          },
+          "source": {
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "uri",
+                "pattern": "^https?://",
+                "description": "Public or authenticated URL of the file."
+              },
+              {
+                "$ref": "#/components/schemas/JobsValidatePost/$defs/sourceObject"
+              }
+            ]
+          },
+          "sourceObject": {
+            "type": "object",
+            "additionalProperties": false,
+            "oneOf": [
+              {
+                "required": [
+                  "url"
+                ]
+              },
+              {
+                "required": [
+                  "file"
+                ]
+              },
+              {
+                "required": [
+                  "fileRef"
+                ]
+              }
+            ],
+            "properties": {
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "pattern": "^https?://",
+                "description": "Public or authenticated URL of the file."
+              },
+              "file": {
+                "type": "string",
+                "contentEncoding": "base64",
+                "description": "Inline base64-encoded file contents. String length must be ≤ 9.3 MB (the ~7 MB decoded equivalent). Prefer `url` or `fileRef` for large files."
+              },
+              "fileRef": {
+                "type": "string",
+                "pattern": "^upload_[A-Za-z0-9._-]+$",
+                "description": "Reference id returned by POST /uploads. Use for large files to avoid body-size limits."
+              },
+              "profile": {
+                "description": "One or more conformance level codes to validate this file against. Optional — when omitted, defaults to 'auto' which infers the closest matching profile from the file itself.",
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/JobsValidatePost/$defs/profileCode"
+                  },
+                  {
+                    "type": "array",
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "items": {
+                      "$ref": "#/components/schemas/JobsValidatePost/$defs/profileCode"
+                    }
+                  }
+                ]
+              },
+              "headers": {
+                "type": "object",
+                "description": "Optional HTTP headers sent when fetching the URL (e.g. Authorization).",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "maxProperties": 16
+              },
+              "name": {
+                "type": "string",
+                "description": "Original filename hint (used when `file` is provided)."
+              },
+              "mimeType": {
+                "type": "string",
+                "description": "MIME type hint (e.g. application/pdf)."
+              }
+            }
+          },
+          "webhook": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "url"
+            ],
+            "description": "Endpoint called when the job reaches a terminal status (done | skipped | error). Inspect the separate `outcome` field for the verdict.",
+            "properties": {
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "pattern": "^https?://",
+                "description": "HTTPS endpoint to POST the job result to."
+              },
+              "headers": {
+                "type": "object",
+                "description": "Optional headers sent with the webhook callback (e.g. Authorization).",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "maxProperties": 16
+              }
+            }
+          },
+          "metaData": {
+            "type": "object",
+            "description": "Free-form caller context echoed back on the response and on webhook callbacks. JSON-serialized payload must be ≤ 4 KB.",
+            "additionalProperties": true
+          }
+        }
+      },
+      "PreviewsPost": {
+        "type": "object",
+        "required": [
+          "sources"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "sources": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                },
+                "file": {
+                  "type": "string",
+                  "description": "Base64 file payload"
+                },
+                "fileRef": {
+                  "type": "string"
+                },
+                "params": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "sync": {
+            "type": "boolean",
+            "default": false
+          },
+          "webhook": {
+            "type": "string"
+          },
+          "metaData": {
+            "type": "object"
+          }
+        }
+      },
+      "FixPost": {
+        "type": "object",
+        "required": [
+          "sources"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "sources": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                },
+                "file": {
+                  "type": "string",
+                  "description": "Base64 file payload"
+                },
+                "fileRef": {
+                  "type": "string"
+                },
+                "profileId": {
+                  "type": "string"
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Specific autofix items to apply; omit to let Filecheck choose defaults."
+                }
+              }
+            }
+          },
+          "repreflight": {
+            "type": "boolean",
+            "default": false,
+            "description": "Re-run preflight after autofix to confirm the result."
+          },
+          "sync": {
+            "type": "boolean",
+            "default": false
+          },
+          "webhook": {
+            "type": "string"
+          },
+          "metaData": {
+            "type": "object"
+          }
+        }
+      },
+      "UploadRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "mimeType": {
+            "type": "string",
+            "description": "Content type of the file you intend to upload."
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "description": "Expected size in bytes. Capped at 500 MB."
+          }
+        }
+      },
+      "UploadResponse": {
+        "type": "object",
+        "properties": {
+          "fileRef": {
+            "type": "string",
+            "description": "Pass this as a job source."
+          },
+          "upload": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string"
+              },
+              "fields": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "POST"
+                ]
+              }
+            }
+          },
+          "maxBytes": {
+            "type": "integer"
+          },
+          "expiresIn": {
+            "type": "integer",
+            "description": "Seconds until the credentials expire."
+          }
+        }
+      },
+      "OrderRequest": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "wp"
+            ],
+            "default": "wp"
+          },
+          "orderId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "total": {},
+          "customer": {
+            "type": "object",
+            "properties": {
+              "id": {},
+              "email": {
+                "type": "string"
+              }
+            }
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "jobId": {
+                  "type": "string"
+                },
+                "itemId": {},
+                "productId": {},
+                "name": {
+                  "type": "string"
+                },
+                "quantity": {},
+                "sku": {
+                  "type": "string"
+                },
+                "total": {}
+              }
+            }
+          }
+        }
+      },
+      "Step": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "description": "preflight, repreflight, autofix, optimize, validate, previews, proof"
+          },
+          "status": {
+            "type": "string"
+          },
+          "outcome": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "pass",
+              "warn",
+              "fail",
+              null
+            ]
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "params": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "runtimeParams": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "started": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "ended": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "duration": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "outputs": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "OutputArtifact": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "bucket": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "downloadUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expiresIn": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        }
+      },
+      "Task": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "updatedAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "string"
+          },
+          "outcome": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fileType": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "mimeType": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fileRef": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "clientRef": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "jobId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "originalArtifact": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "outputArtifacts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OutputArtifact"
+            }
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Step"
+            }
+          }
+        }
+      },
+      "Job": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "modifiedAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "description": "idle, incomplete, uploading, processing, ready, partial, rejected"
+          },
+          "outcome": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "channel": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "api",
+              "store",
+              "admin",
+              null
+            ]
+          },
+          "ruleId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "workflowId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "metaData": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "tasks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Task"
+            }
+          },
+          "orderId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "customerId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "customerEmail": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "summary": {
+            "type": "object",
+            "description": "Present on non-lean responses."
+          },
+          "results": {
+            "type": "object",
+            "description": "Aggregated validate / preflight / optimize results on non-lean responses."
+          }
+        }
+      },
+      "Run": {
+        "type": "object",
+        "description": "A flattened per-file view returned by ?expand=runs.",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "outcome": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "pass",
+              "warn",
+              "fail",
+              null
+            ]
+          },
+          "status": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "hasOutput": {
+            "type": "boolean"
+          },
+          "proofs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "downloadUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "JobResponse": {
+        "type": "object",
+        "properties": {
+          "job": {
+            "$ref": "#/components/schemas/Job"
+          }
+        }
+      },
+      "JobPendingResponse": {
+        "type": "object",
+        "properties": {
+          "pending": {
+            "type": "boolean"
+          },
+          "job": {
+            "$ref": "#/components/schemas/Job"
+          }
+        }
+      },
+      "RunsResponse": {
+        "type": "object",
+        "properties": {
+          "runs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Run"
+            }
+          }
+        }
+      },
+      "Resource": {
+        "type": "object",
+        "description": "Library resources share a common envelope. Each carries an id, a human label, an enabled flag, and a `source` of `domain` or `store`.",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "domain",
+              "store"
+            ]
+          }
+        },
+        "additionalProperties": true
+      },
+      "Workflow": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Resource"
+          }
+        ]
+      },
+      "Connector": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Resource"
+          }
+        ]
+      },
+      "Rule": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Resource"
+          }
+        ]
+      },
+      "Profile": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Resource"
+          }
+        ]
+      },
+      "OptimizePreset": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Resource"
+          }
+        ]
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,40 @@
+---
+title: "OpenCart & PrestaShop"
+description: "The shared front-end snippet for OpenCart, PrestaShop, and any other CMS."
+---
+
+OpenCart and PrestaShop follow the same pattern as [WooCommerce](/integrations/woocommerce). All platforms share identical front-end output: a mount point, a hidden field for the job id, and `Filecheck.mount`.
+
+```html
+<div id="fc-inline"></div>
+<input type="hidden" name="fc_job_id" id="fc-job-id" value="">
+<script src="https://cdn.filecheck.io/element/{pk}/filecheck.js" async></script>
+<script>
+(function () {
+  var started = Date.now();
+  (function tick() {
+    if (window.Filecheck && window.Filecheck.mount) {
+      var el = window.Filecheck.mount({
+        publishableKey: '{pk}',
+        workflowId:     '{workflowId}',
+        presentation:   '{presentation}',
+        connectorId:    '{connectorId}' || undefined,
+      });
+      if (el) el.on('status', function (e) {
+        document.getElementById('fc-job-id').value = e.jobId || '';
+      });
+      return;
+    }
+    if (Date.now() - started < 10000) setTimeout(tick, 50);
+  })();
+})();
+</script>
+```
+
+`Filecheck.mount` handles mounting into `#fc-inline`, cart-button gating, dialog creation, and the proof gallery. The only platform-specific code is the `status` to hidden `fc_job_id` write for [server-side verification](/server/verify-jobs).
+
+## Per-platform differences
+
+- **Module admin**: store publishable key, secret key, `agentId`, default `workflowId`, presentation, and per-product `workflowId` / `connectorId` overrides.
+- **Add-to-cart / checkout**: validate that `jobId` was submitted; persist it as an order attribute.
+- **Post-purchase**: use the secret key server-side to fetch output and attach it to the order.

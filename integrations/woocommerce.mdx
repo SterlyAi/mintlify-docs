@@ -1,0 +1,78 @@
+---
+title: "WooCommerce"
+description: "Gate add-to-cart on file validation in WooCommerce, and attach the checked file to the order."
+---
+
+The WooCommerce integration drops the Element onto the product page, gates **Add to cart** on `canProceed`, and persists the `jobId` to the order for [server-side verification](/server/verify-jobs).
+
+## Settings
+
+Store these in your plugin settings: publishable key, secret key, `agentId`, default `workflowId`, a per-product override, presentation, and "block checkout if not ready". Optionally a [connector](/element/connectors) per product.
+
+## Render the Element on the product page
+
+```php
+add_action('woocommerce_before_add_to_cart_button', function () {
+    global $product;
+    $wf = get_post_meta($product->get_id(), '_fc_workflow_id', true)
+          ?: get_option('fc_default_workflow_id');
+    if (!$wf) return;
+
+    $pk   = esc_js(get_option('fc_publishable_key'));
+    $pid  = (int) $product->get_id();
+
+    echo "<div id='fc-slot-{$pid}'></div>";
+    echo "<input type='hidden' name='fc_job_id' id='fc-job-id-{$pid}' value=''>";
+
+    wp_enqueue_script('filecheck', "https://cdn.filecheck.io/element/{$pk}/filecheck.js", [], null, true);
+
+    wp_add_inline_script('filecheck', "
+        (function () {
+            var started = Date.now();
+            (function tick() {
+                if (window.Filecheck && window.Filecheck.mount) {
+                    var el = window.Filecheck.mount({
+                        publishableKey: '{$pk}',
+                        workflowId:     '{$wf}',
+                        mountSelector:  '#fc-slot-{$pid}'
+                    });
+                    if (el) el.on('status', function (e) {
+                        document.getElementById('fc-job-id-{$pid}').value = e.jobId || '';
+                    });
+                    return;
+                }
+                if (Date.now() - started < 10000) setTimeout(tick, 50);
+            })();
+        })();
+    ");
+});
+```
+
+## Block add-to-cart server-side
+
+```php
+add_filter('woocommerce_add_to_cart_validation', function ($valid, $product_id) {
+    if (get_post_meta($product_id, '_fc_required', true) && empty($_POST['fc_job_id'])) {
+        wc_add_notice('Please upload and validate your file first.', 'error');
+        return false;
+    }
+    return $valid;
+}, 10, 2);
+```
+
+## Persist the job on the order
+
+```php
+add_filter('woocommerce_add_cart_item_data', function ($data) {
+    if (!empty($_POST['fc_job_id']))
+        $data['fc_job_id'] = sanitize_text_field($_POST['fc_job_id']);
+    return $data;
+});
+
+add_action('woocommerce_checkout_create_order_line_item', function ($item, $key, $values) {
+    if (!empty($values['fc_job_id']))
+        $item->update_meta_data('Filecheck Job', $values['fc_job_id']);
+}, 10, 3);
+```
+
+After purchase, use your [secret key to fetch the result](/server/verify-jobs) and download the fixed file.

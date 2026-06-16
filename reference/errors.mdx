@@ -1,0 +1,28 @@
+---
+title: "Errors & common mistakes"
+description: "The error event, plus the integration mistakes that trip people up most often."
+---
+
+## The error event
+
+Recoverable iframe errors fire on the `error` event:
+
+```js
+intake.on('error', ({ code, message }) => {
+  console.error('Filecheck error', code, message);
+});
+```
+
+## Common mistakes
+
+| Mistake | Correct approach |
+| --- | --- |
+| `create('intake', { ruleId })` | The option is `workflowId`, not `ruleId`. |
+| Re-deriving `canProceed` from `status` or `files` | Use `canProceed` as-is. |
+| Secret key `sk_…` in browser JS | Server-side only. |
+| Fixed `height` on the mount div | Set `width` only; the widget self-sizes. |
+| Calling `Filecheck()` before the async script loads | Poll for `window.Filecheck` first. |
+| Two elements, assuming one controls both | Track `canProceed` per element. |
+| Ignoring `proof` when `approvalRequired: true` | Call `respondToProof()` or the workflow stalls. |
+| Hand-building connector bindings in a plugin | Pass `connectorId` or the connector JSON. |
+| Polling for `window.Filecheck` without `.mount` | Check `window.Filecheck && window.Filecheck.mount`. |

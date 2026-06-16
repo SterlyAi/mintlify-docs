@@ -1,0 +1,36 @@
+---
+title: "Soft-proofing"
+description: "Let customers approve automated changes before they proceed. How the proof gate works."
+---
+
+When the merchant enables proofing on a [Workflow](/concepts/workflows), the Element renders a visual **soft-proof** of the file after automated changes (for example, RGB to CMYK conversion or a padded canvas) and asks the customer to sign off.
+
+## The proof event
+
+The Element fires `proof` once pages are rendered:
+
+```ts
+interface ProofPayload {
+  pages: Array<{ url: string; page: number; width: number; height: number; mimeType: string; bytes: number; key: string }>;
+  approvalRequired?: boolean;  // if true, the workflow halts until respondToProof() is called
+  message?: string;
+  affirmButtonText?: string;
+}
+```
+
+```js
+intake.on('proof', ({ pages, approvalRequired }) => {
+  if (!approvalRequired) return; // informational only
+
+  showProofGallery(pages, {
+    onApprove: () => intake.respondToProof(true),
+    onReject:  () => intake.respondToProof(false),
+  });
+});
+```
+
+<Note>
+  If you don't build a custom gallery, ignore the `proof` event. The built-in iframe gallery handles approval automatically.
+</Note>
+
+See [Events](/element/events) for the full event list.

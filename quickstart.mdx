@@ -1,47 +1,83 @@
 ---
 title: "Quickstart"
-description: "Begin with a guide on the fastest path to a successful outcome"
+description: "Embed the Filecheck Element, gate a submit button, and verify the result. From zero to a working integration."
 ---
 
-Describe how someone begins using your product. What is the first thing they need to do? Are there any prerequisites?
-
-A quickstart should take someone from zero to using your product. They'll get a quick win and a sense of what they can accomplish.
+This guide takes you from zero to a working upload gate. You will embed the Element, block your submit button until a file passes, and learn where to verify the result server-side.
 
 ## Prerequisites
 
-Before you begin, you must have:
+Before you begin, you need:
 
-- Requirement one (for example, Node.js 18+, a free account, an API key)
-- Requirement two (for example, a compatible device, a compatible browser, a compatible operating system)
+- A Filecheck account ([sign up](https://admin.filecheck.io)).
+- A **publishable key** (`pk_live_…` or `pk_test_…`). See [Authentication](/authentication).
+- A **Workflow** configured in the admin, which gives you a `workflowId` (`wf_…`). See [Workflows](/concepts/workflows).
 
 ## Get started
 
 <Steps>
-  <Step title="Install">
-    Describe how to install your product or sign up.
+  <Step title="Add the Element to your page">
+    Load the script and add a mount point where the widget should appear.
 
-    ```bash
-    npm install your-package
+    ```html
+    <script src="https://cdn.filecheck.io/element/v1/filecheck.js"></script>
+
+    <div id="fc-slot"></div>
+    <button id="checkout" disabled>Add to cart</button>
     ```
+
+    <Note>
+      Loading the script without `async` means `window.Filecheck` is ready for the inline script below. For async loading, see [Installation](/element/installation).
+    </Note>
   </Step>
-  <Step title="Configure">
-    Describe any setup or configuration needed before first use.
+  <Step title="Mount the Element and gate your button">
+    Create an `intake` element for your Workflow, mount it, and disable the submit button until `canProceed` is `true`.
 
-    ```bash
-    your-cli init
+    ```html
+    <script>
+      const fc = Filecheck('pk_live_…');
+
+      const intake = fc.elements.create('intake', {
+        workflowId: 'wf_…',
+        presentation: 'inline'
+      });
+
+      intake.mount('#fc-slot');
+
+      intake.on('status', ({ canProceed, jobId }) => {
+        document.querySelector('#checkout').disabled = !canProceed;
+        document.querySelector('#fc-job-id').value = jobId ?? '';
+      });
+    </script>
     ```
+
+    <Warning>
+      The option is `workflowId` (a `wf_…` id), not `ruleId`. Gate on `canProceed` directly. Do not re-derive it from `status` or `files`. See [Status payload](/reference/status-payload).
+    </Warning>
   </Step>
-  <Step title="Run it">
-    Show the first thing a user does to see it working.
+  <Step title="Persist the job and verify server-side">
+    Write the `jobId` into a hidden field, attach it to the order, then use your **secret key** to fetch the result after purchase.
 
     ```bash
-    your-cli start
+    curl https://api.filecheck.io/jobs/{jobId} \
+      -H "Authorization: Bearer sk_live_…"
     ```
+
+    See [Verify jobs](/server/verify-jobs).
   </Step>
 </Steps>
 
-<Tip>
-  Give people a way to get help. This could be a link to a support page, a chat with a customer support agent, or a forum for your product.
+## Next steps
 
-  Example: Need help? Reach out to us at [support@yourcompany.com](mailto:support@yourcompany.com).
+<CardGroup cols={2}>
+  <Card title="Use a no-code plugin" icon="puzzle-piece" href="/integrations/woocommerce">
+    WooCommerce, Shopify, OpenCart, and PrestaShop.
+  </Card>
+  <Card title="Element API" icon="cube" href="/element/create-and-mount">
+    All create options, methods, and events.
+  </Card>
+</CardGroup>
+
+<Tip>
+  Need help? Reach out at [support@filecheck.io](mailto:support@filecheck.io).
 </Tip>

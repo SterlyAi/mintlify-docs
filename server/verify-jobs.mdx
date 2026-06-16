@@ -1,0 +1,34 @@
+---
+title: "Verify jobs"
+description: "Use your secret key to fetch a job server-side and download the fixed output file."
+---
+
+Client-side gating keeps customers honest, but you should verify the job server-side before fulfilling an order.
+
+## Fetch a job
+
+```bash
+GET https://api.filecheck.io/jobs/{jobId}
+GET https://api.filecheck.io/jobs/{jobId}?expand=runs   # full pipeline detail
+```
+
+Authenticate with your secret key:
+
+```bash
+curl https://api.filecheck.io/jobs/{jobId} \
+  -H "Authorization: Bearer sk_live_…"
+```
+
+## Verify before fulfilling
+
+1. Confirm the job exists and belongs to the expected Workflow.
+2. Confirm it reached a terminal status where `canProceed` is `true`.
+3. Read `files[n].outputRef` to download the auto-fixed file.
+
+<Warning>
+  Never call this endpoint from the browser. The secret key is server-side only. See [Authentication](/authentication).
+</Warning>
+
+<Note>
+  Prefer not to poll? Configure [webhooks](/server/webhooks) to receive results as they complete.
+</Note>

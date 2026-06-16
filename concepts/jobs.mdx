@@ -1,0 +1,30 @@
+---
+title: "Jobs"
+description: "A job is one run of a file (or set of files) through a Workflow. Gate on its canProceed flag."
+---
+
+A **job** is a single run of one or more files through a [Workflow](/concepts/workflows). Each job has an id (`job_…`) and emits [status events](/reference/status-payload) as it progresses.
+
+## Statuses
+
+| Status | Meaning |
+| --- | --- |
+| `idle` | No files yet (fires once at startup). |
+| `incomplete` | Fewer files than the Workflow requires. |
+| `uploading` | Files are uploading. |
+| `processing` | Validation and remediation are running. |
+| `ready` | All files passed. |
+| `partial` | Warnings only, or policy is accept-with-warnings. |
+| `rejected` | Hard failure. |
+
+## canProceed
+
+`canProceed` is `true` only for `ready` and `partial`. Gate your submit button on this flag directly.
+
+<Warning>
+  Do not re-derive `canProceed` from `status` or `files`. Filecheck already collapses the Workflow's `onFail` policy into it.
+</Warning>
+
+## Persisting the job
+
+When `canProceed` is `true`, write the `jobId` into a hidden field and attach it to the order. After purchase, use your secret key to [fetch the result and download fixed files](/server/verify-jobs).

@@ -1,0 +1,29 @@
+---
+title: "Remediation"
+description: "Filecheck prefers fixing files over rejecting them. What gets auto-corrected on ingestion."
+---
+
+Filecheck prefers **remediation over rejection**. When a file has a fixable problem, the Workflow corrects it instead of turning the customer away. The fixed output is available as `outputRef` on each file in the [status payload](/reference/status-payload).
+
+## Commonly auto-fixed issues
+
+<CardGroup cols={2}>
+  <Card title="Color" icon="palette">
+    Convert RGB to CMYK with standard targets (FOGRA39 / GRACoL); convert spot colors to process.
+  </Card>
+  <Card title="Bleed & geometry" icon="crop">
+    Add missing bleed, align page boxes (Media/Trim/Bleed), normalize document geometry.
+  </Card>
+  <Card title="Fonts" icon="font">
+    Embed and subset fonts; outline text where required.
+  </Card>
+  <Card title="Images" icon="image">
+    Standardize backgrounds to white, strip EXIF, flatten transparency, upscale low-DPI rasters.
+  </Card>
+</CardGroup>
+
+<Note>
+  The exact remediation that runs is controlled by the [Workflow](/concepts/workflows). This page lists what is possible, not what runs on every job.
+</Note>
+
+For the full catalog of checks and their severities, see the [product audit matrix](https://filecheck.io/product#audits).

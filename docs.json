@@ -1,34 +1,137 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mintlify Starter Kit",
+  "name": "Filecheck",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#F91B25",
+    "light": "#FA4951",
+    "dark": "#9D1217"
   },
   "favicon": "/favicon.svg",
   "navigation": {
-    "pages": [
+    "tabs": [
       {
-        "group": "Getting Started",
-        "pages": [
-          "index",
-          "quickstart"
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get started",
+            "pages": [
+              "index",
+              "quickstart",
+              "authentication"
+            ]
+          },
+          {
+            "group": "Core concepts",
+            "pages": [
+              "concepts/workflows",
+              "concepts/jobs",
+              "concepts/remediation",
+              "concepts/soft-proofing"
+            ]
+          },
+          {
+            "group": "The Element",
+            "pages": [
+              "element/installation",
+              "element/create-and-mount",
+              "element/events",
+              "element/presentation",
+              "element/connectors"
+            ]
+          },
+          {
+            "group": "Integrations",
+            "pages": [
+              "integrations/woocommerce",
+              "integrations/shopify",
+              "integrations/opencart-prestashop",
+              "integrations/headless"
+            ]
+          },
+          {
+            "group": "Server-side",
+            "pages": [
+              "server/verify-jobs",
+              "server/webhooks"
+            ]
+          },
+          {
+            "group": "Reference",
+            "pages": [
+              "reference/status-payload",
+              "reference/facts",
+              "reference/errors",
+              "reference/changelog"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API reference",
+        "openapi": "openapi.json",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "api-reference/introduction"
+            ]
+          },
+          {
+            "group": "Jobs",
+            "pages": [
+              "POST /jobs",
+              "GET /jobs",
+              "GET /jobs/{id}",
+              "DELETE /jobs/{id}",
+              "POST /jobs/preflight",
+              "POST /jobs/fix",
+              "POST /jobs/optimize",
+              "POST /jobs/validate",
+              "POST /jobs/previews"
+            ]
+          },
+          {
+            "group": "Uploads & orders",
+            "pages": [
+              "POST /uploads",
+              "POST /orders/{id}"
+            ]
+          },
+          {
+            "group": "Library",
+            "pages": [
+              "GET /workflows",
+              "GET /workflows/{id}",
+              "GET /connectors",
+              "GET /connectors/{id}",
+              "GET /rules",
+              "GET /rules/{id}",
+              "GET /profiles",
+              "GET /profiles/{id}",
+              "GET /optimize-presets",
+              "GET /optimize-presets/{id}"
+            ]
+          }
         ]
       }
     ],
     "global": {
       "anchors": [
         {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
+          "anchor": "Website",
+          "href": "https://filecheck.io",
+          "icon": "globe"
         },
         {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
+          "anchor": "Demos",
+          "href": "https://filecheck.io/demos",
+          "icon": "play"
+        },
+        {
+          "anchor": "Support",
+          "href": "mailto:support@filecheck.io",
+          "icon": "envelope"
         }
       ]
     }
@@ -40,33 +143,29 @@
   "navbar": {
     "links": [
       {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "label": "Website",
+        "href": "https://filecheck.io"
       }
     ],
     "primary": {
       "type": "button",
       "label": "Dashboard",
-      "href": "https://app.mintlify.com"
+      "href": "https://admin.filecheck.io"
     }
   },
   "contextual": {
     "options": [
       "copy",
       "view",
+      "download-spec",
       "chatgpt",
-      "claude",
-      "perplexity",
-      "mcp",
-      "cursor",
-      "vscode"
+      "claude"
     ]
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
+      "x": "https://x.com/filecheckio",
+      "linkedin": "https://linkedin.com/company/filecheckio"
     }
   }
 }

@@ -1,0 +1,28 @@
+---
+title: "Webhooks"
+description: "Receive job results as they happen instead of polling the API."
+---
+
+Configure webhooks in the [Filecheck admin](https://admin.filecheck.io) to push results to your server without polling.
+
+## Events
+
+| Event | Fires when |
+| --- | --- |
+| `job.created` | A job is created. |
+| `job.completed` | A job reaches a terminal status. |
+
+## Handling a webhook
+
+On `job.completed`, fetch the full job with your secret key and download `files[n].outputRef`:
+
+```bash
+curl https://api.filecheck.io/jobs/{jobId}?expand=runs \
+  -H "Authorization: Bearer sk_live_…"
+```
+
+<Note>
+  Verify webhook signatures and respond `2xx` quickly; do heavy work asynchronously.
+</Note>
+
+{/* TODO: document the signing scheme and payload shape once finalized. */}

@@ -1,0 +1,33 @@
+---
+title: "Facts"
+description: "File measurements emitted alongside every status event. Dimensions are in millimetres."
+---
+
+The `facts` event emits the measurements Filecheck derived from the uploaded file(s), alongside every `status` event. Use it to drive custom logic, or use [Connectors](/element/connectors) to map facts onto page controls without code.
+
+```ts
+interface IntakeFacts {
+  files: Array<{
+    id: string | null;
+    name: string | null;
+    pageCount: number | null;
+    width:  number | null;   // mm
+    height: number | null;   // mm
+    area:   number | null;   // mm²
+    orientation: string | null;
+    spotColorCount: number;
+    usesTransparency: boolean;
+  }>;
+  aggregate: {
+    fileCount: number;
+    pageCount: number;       // summed across files
+    width:  number | null;   // first file (mm)
+    height: number | null;   // first file (mm)
+    area:   number | null;   // first file (mm²)
+  };
+}
+```
+
+<Note>
+  Dimensions are always millimetres. Multi-file uploads use the **first file** for width/height/area; counts aggregate across all files.
+</Note>

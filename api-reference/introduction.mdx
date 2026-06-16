@@ -1,0 +1,47 @@
+---
+title: "API overview"
+description: "Base URL, authentication, and conventions for the Filecheck REST API."
+---
+
+The Filecheck REST API lets you submit files as jobs, fetch results, and read your library resources (workflows, rules, connectors, profiles, optimize presets). Use it server-side with your [secret key](/authentication).
+
+## Base URL
+
+```
+https://api.filecheck.io
+```
+
+## Authentication
+
+Every request is authenticated with your secret key as a bearer token:
+
+```bash
+curl https://api.filecheck.io/jobs \
+  -H "Authorization: Bearer sk_live_…"
+```
+
+<Warning>
+  Secret keys (`sk_…`) are server-side only. Never call the API from the browser.
+</Warning>
+
+## Jobs are async by default
+
+`POST /jobs` (and the sugar wrappers like `/jobs/fix`) return **`201`** immediately and process in the background. Set `sync: true` to wait up to ~27 seconds for the result (`200`), or receive **`202`** with `pending: true` if it is still running. `POST /jobs/validate` is the exception: it is synchronous by default, with `async: true` to return `201` immediately.
+
+Either way, you can pass a `webhook` to be notified when the job reaches a terminal status, or poll `GET /jobs/{id}`. Use `?expand=runs` for a flattened per-file summary with proof and download URLs.
+
+## Sources
+
+A job source can be a `url`, a base64 `file`, or a `fileRef` from `POST /uploads` (preferred for large files). The canonical `POST /jobs` body attaches ordered `steps[]` to each source; the sugar wrappers build those steps for you.
+
+## Errors
+
+Errors return a non-2xx status with a consistent body:
+
+```json
+{ "error": true, "message": "…" }
+```
+
+<Note>
+  Every endpoint, parameter, and schema below is generated from the live OpenAPI spec. Use the playground to try calls with your key.
+</Note>

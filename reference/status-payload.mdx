@@ -1,0 +1,43 @@
+---
+title: "Status payload"
+description: "The shape of the status event. Gate your submit button on canProceed."
+---
+
+The `status` event is the one you must handle. Gate your submit button on `canProceed`.
+
+```ts
+interface IntakeStatusPayload {
+  status:     'idle'        // no files yet (fires once at startup)
+            | 'incomplete'  // fewer files than required
+            | 'uploading'
+            | 'processing'
+            | 'ready'       // all files passed
+            | 'partial'     // warnings only, or policy = accept_with_warnings
+            | 'rejected';   // hard fail
+  terminal:   boolean;
+  canProceed: boolean;      // gate your submit button on THIS
+  workflowId: string | null;
+  jobId:      string | null;
+  files: Array<{
+    id:        string;
+    name:      string;
+    fileRef:   string | null;  // input file CDN ref
+    outcome:   'pass' | 'warn' | 'fail' | null;
+    status:    string;
+    outputRef: string | null;  // auto-fixed output CDN ref (if any)
+  }>;
+}
+```
+
+<Warning>
+  `canProceed` is `true` only for `ready` and `partial`. Do not re-derive it from `status` or `files`. Filecheck already collapses the Workflow's `onFail` policy into it.
+</Warning>
+
+## Minimal pattern
+
+```js
+intake.on('status', ({ canProceed, jobId }) => {
+  submitBtn.disabled = !canProceed;
+  hiddenJobIdInput.value = jobId ?? '';
+});
+```

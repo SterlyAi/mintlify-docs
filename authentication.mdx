@@ -1,0 +1,37 @@
+---
+title: "Authentication"
+description: "Publishable keys run in the browser, secret keys run on your server. How Filecheck keys and scopes work."
+---
+
+Filecheck uses two key types. Get both from the [dashboard](https://admin.filecheck.io).
+
+| Key | Prefix | Where it runs |
+| --- | --- | --- |
+| **Publishable key** | `pk_live_…` / `pk_test_…` | In page JavaScript. Safe to ship in public code. |
+| **Secret key** | `sk_live_…` / `sk_test_…` | Server-side only. Never put it in browser code. |
+
+<Warning>
+  Never expose a secret key (`sk_…`) in client-side code, a public repository, or a mobile app bundle. Use it only from your server.
+</Warning>
+
+## Test and live modes
+
+`*_test_…` keys run against test data and never bill. `*_live_…` keys run in production. Swap the key prefix to switch modes; no other code changes are required.
+
+## Agent ID (optional)
+
+An **`agentId`** (`agt_…`) scopes the Element to a specific sub-tenant or store. This is useful when one Filecheck account powers multiple storefronts.
+
+```js
+const fc = Filecheck('pk_live_…', { agentId: 'agt_…' });
+```
+
+## Using the keys
+
+- **Publishable key** initializes the [Element](/element/installation) in the browser.
+- **Secret key** authenticates server-side requests to the [API](/server/verify-jobs) with a bearer token:
+
+```bash
+curl https://api.filecheck.io/jobs/{jobId} \
+  -H "Authorization: Bearer sk_live_…"
+```

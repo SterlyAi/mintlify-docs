@@ -1,0 +1,34 @@
+---
+title: "Workflows"
+description: "A Workflow defines which files are accepted, what validation runs, and what happens on failure."
+---
+
+A **Workflow** is the rule the merchant configures in the Filecheck admin. It controls:
+
+- Which files are accepted (types, counts, sizes).
+- What validation and preflight checks run.
+- What remediation is attempted.
+- What happens on failure (the `onFail` policy).
+
+Each Workflow has an id (`wf_…`) that you pass to the [Element](/element/create-and-mount) as `workflowId`.
+
+<Note>
+  The option is `workflowId`, not `ruleId`. This is the most common integration mistake.
+</Note>
+
+## The onFail policy
+
+The Workflow's `onFail` policy decides whether a file with problems can still proceed. Filecheck collapses this policy into a single `canProceed` flag on every [status event](/reference/status-payload), so your code never has to interpret the policy itself.
+
+| Policy | Result |
+| --- | --- |
+| Reject | Files with errors are blocked (`canProceed: false`). |
+| Accept with warnings | Files with warnings can proceed (`canProceed: true`, status `partial`). |
+
+## Mapping Workflows to products
+
+Set a default Workflow for your store and override it per product. In the [plugins](/integrations/woocommerce), this is a per-product setting; via the Element, pass a different `workflowId` per page.
+
+<Card title="Jobs" icon="arrow-right" href="/concepts/jobs">
+  See what happens when a file runs through a Workflow.
+</Card>

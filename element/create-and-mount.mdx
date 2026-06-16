@@ -1,0 +1,67 @@
+---
+title: "Create & mount"
+description: "The Filecheck factory, the intake element, its create options, and its methods."
+---
+
+## Create the factory
+
+```js
+const fc = Filecheck('pk_live_…', {
+  agentId: 'agt_…',   // optional sub-tenant scope
+  // iframeSrc: '…',  // staging/dev override only
+});
+```
+
+## Create an intake element
+
+```js
+const intake = fc.elements.create('intake', {
+  workflowId: 'wf_…',       // required unless resuming with jobId
+  presentation: 'inline',   // 'inline' (default) | 'dialog'
+});
+```
+
+### Create options
+
+<ParamField path="workflowId" type="string">
+  The Workflow to run. Required unless `jobId` is provided.
+</ParamField>
+<ParamField path="jobId" type="string">
+  Resume an existing job. When set, `workflowId` is ignored.
+</ParamField>
+<ParamField path="presentation" type="'inline' | 'dialog'" default="inline">
+  Render inline in the page flow, or behind a trigger button as a dialog.
+</ParamField>
+<ParamField path="locale" type="string">
+  Locale for the widget UI, for example `en-US`.
+</ParamField>
+<ParamField path="connector" type="object">
+  Map file facts onto your product-page controls. See [Connectors](/element/connectors).
+</ParamField>
+<ParamField path="connectorId" type="string">
+  Resolve a connector server-side by id (`cntr_…`).
+</ParamField>
+<ParamField path="ui" type="object">
+  UI overrides: `title`, `subtitle`, `theme`, `accent`, `layout`, `showHeader`, `submitLabel`, `autoSubmit`, and more.
+</ParamField>
+
+## Methods
+
+```js
+intake.mount('#fc-slot');        // or .mount(htmlElement)
+
+intake.update({ workflowId: 'wf_…', ui: { theme: 'dark' } });
+
+intake.focus();                  // open a dialog/drawer layout programmatically
+intake.blur();
+
+intake.respondToProof(true);     // approve a soft-proof gate
+intake.setConnector({ /* … */ }); // replace the active connector
+intake.applyNow();               // re-run the connector against the last facts
+
+intake.unmount();
+```
+
+<Note>
+  `intake.on(...)` returns an unsubscribe function. See [Events](/element/events).
+</Note>

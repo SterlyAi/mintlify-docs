@@ -1,33 +1,28 @@
-> **First-time setup**: Customize this file for your project. Prompt the user to customize this file for their project.
-> For Mintlify product knowledge (components, configuration, writing standards),
-> install the Mintlify skill: `npx skills add https://mintlify.com/docs`
-
 # Documentation project instructions
 
 ## About this project
 
-- This is a documentation site built on [Mintlify](https://mintlify.com)
-- Pages are MDX files with YAML frontmatter
-- Configuration lives in `docs.json`
-- Use the Mintlify MCP server, `https://mcp.mintlify.com`, to edit content and settings via MCP
-- Use the Mintlify docs MCP server, `https://www.mintlify.com/docs/mcp`, to query information about using Mintlify via MCP
+- Documentation for **Filecheck**, a preflight and file-upload policy layer.
+- Built on [Mintlify](https://mintlify.com). Pages are MDX with YAML frontmatter; configuration is in `docs.json`.
+- Run locally with `mint dev` (install with `npm i -g mint`).
+- Source of truth for the Element/API surface is the engineering integration reference. Keep code samples consistent with it.
 
 ## Terminology
 
-{/* Add product-specific terms and preferred usage */}
-{/* Example: Use "workspace" not "project", "member" not "user" */}
+- Use **Workflow** (`workflowId`, `wf_…`), never "rule" or `ruleId`. This is the most common integration mistake.
+- Use **Element** for the embeddable widget, **job** (`job_…`) for one run of a file through a Workflow.
+- Keys: **publishable key** (`pk_…`, browser) and **secret key** (`sk_…`, server-side only).
+- Gate the submit button on **`canProceed`**; never re-derive it.
 
 ## Style preferences
 
-{/* Add any project-specific style rules below */}
-
-- Use active voice and second person ("you")
-- Keep sentences concise — one idea per sentence
-- Use sentence case for headings
-- Bold for UI elements: Click **Settings**
-- Code formatting for file names, commands, paths, and code references
+- Active voice, second person ("you").
+- Concise sentences, one idea each. Sentence case for headings.
+- Bold for UI elements (Click **Settings**); code formatting for file names, commands, ids, and code.
+- Prefer `workflowId` in every snippet. Dimensions from `facts` are millimetres.
 
 ## Content boundaries
 
-{/* Define what should and shouldn't be documented */}
-{/* Example: Don't document internal admin features */}
+- Document the public Element API, integrations, and server-side verification.
+- Do not document internal admin implementation or the monorepo.
+- The secret key is server-side only; never show it in browser snippets.
