@@ -1,34 +1,64 @@
 ---
 title: "Workflows"
-description: "A Workflow defines which files are accepted, what validation runs, and what happens on failure."
+description: "A Workflow is the automated fulfillment stream a file travels through — combining intake, soft-proofing, trigger events, and downstream processing steps."
 ---
 
-A **Workflow** is the rule the merchant configures in the Filecheck admin. It controls:
+A **Workflow** is the automated processing stream configured in the Filecheck admin and assigned to your storefront products. It is the core operational pipeline of Filecheck, coordinating how files are received from customers, proofed, triggered, optimized, and packaged.
 
-- Which files are accepted (types, counts, sizes).
-- What validation and preflight checks run.
-- What remediation is attempted.
-- What happens on failure (the `onFail` policy).
-
-Each Workflow has an id (`wf_…`) that you pass to the [Element](/element/create-and-mount) as `workflowId`.
+Each Workflow is uniquely identified by an ID (`wf_…`), which is automatically loaded as a select option in your e-commerce plugin, or passed to the front-end [Element](/element/create-and-mount) as the `workflowId`.
 
 <Note>
   The option is `workflowId`, not `ruleId`. This is the most common integration mistake.
 </Note>
 
-## The onFail policy
+## The workflow stream: divided in two
 
-The Workflow's `onFail` policy decides whether a file with problems can still proceed. Filecheck collapses this policy into a single `canProceed` flag on every [status event](/reference/status-payload), so your code never has to interpret the policy itself.
+To keep your storefront fast and prevent wasting server resources on unpaid carts, every workflow is split into two sequential phases by a **trigger event**:
 
-| Policy | Result |
+```mermaid
+graph TD
+    A[Customer Uploads File] --> B["Intake (Synchronous)"]
+    B -->|Check passes or warns| C[Trigger Event]
+    C -->|Trigger fires| D["Processing (Asynchronous)"]
+    D --> E[Final Production Files]
+```
+
+<CardGroup cols={2}>
+  <Card title="1. Intake (Client waits)" icon="hourglass-half">
+    Runs **while the customer is waiting** on the product page. The assigned [Upload Rule](/concepts/building-blocks) accepts the file, checks file type limits, and runs a **Preflight Profile** in milliseconds. This phase is optimized for speed; it only determines if the file is acceptable enough to proceed.
+  </Card>
+  <Card title="2. Processing (Triggered)" icon="gears">
+    Runs **after a trigger event fires** (for example, once an order is placed). Since the client is no longer waiting, Filecheck can execute heavier asynchronous operations: automatically fixing files, downsampling images with **Optimization Presets**, splitting/merging pages, and bundling production-ready ZIPs.
+  </Card>
+</CardGroup>
+
+---
+
+## Trigger events: bridging the two phases
+
+The **trigger** is the gatekeeper that tells Filecheck when to move files from the intake phase to the processing phase.
+
+| Trigger Event | When Processing Starts... |
 | --- | --- |
-| Reject | Files with errors are blocked (`canProceed: false`). |
-| Accept with warnings | Files with warnings can proceed (`canProceed: true`, status `partial`). |
+| **Once uploads are accepted** | Immediately after intake passes. Perfect for instant SaaS tools or live web tools. |
+| **After customer approves soft-proof** | Once the customer reviews and signs off on their generated visual preview. |
+| **After an order is placed** | When checkout completes (the standard choice for e-commerce, ensuring you only process paid orders). |
+| **Manually from Admin Jobs** | Held in a queue until an administrator clicks **Run** from the Jobs dashboard. |
+| **Via API / webhook** | Fired on demand when your custom external systems send an API request. |
 
-## Mapping Workflows to products
+---
 
-Set a default Workflow for your store and override it per product. In the [plugins](/integrations/woocommerce), this is a per-product setting; via the Element, pass a different `workflowId` per page.
+## Mapping workflows to products
 
-<Card title="Jobs" icon="arrow-right" href="/concepts/jobs">
-  See what happens when a file runs through a Workflow.
-</Card>
+Instead of editing raw code, Filecheck plugins for **WooCommerce, Shopify, PrestaShop, and OpenCart** handle this automatically:
+1. Under your store's general settings, you can assign a global **Default Workflow** from a dropdown list sync'd directly from your active Filecheck account.
+2. Edit any specific product to override that default and map a specialized workflow (e.g., assigning a *Large Format Poster* workflow to a poster product, and a *Business Cards* workflow to card products).
+
+<CardGroup cols={2}>
+  <Card title="Building blocks" icon="cubes" href="/concepts/building-blocks">
+    How Upload Rules, Profiles, Checks, and Presets fit together.
+  </Card>
+  <Card title="Build a workflow" icon="sliders" href="/configuration/workflows">
+    Step-by-step setup guide in the dashboard.
+  </Card>
+</CardGroup>

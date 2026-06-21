@@ -17,13 +17,22 @@
             "group": "Get started",
             "pages": [
               "index",
-              "quickstart",
-              "authentication"
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Integrations",
+            "pages": [
+              "tutorials/wordpress-installation",
+              "tutorials/shopify-installation",
+              "tutorials/prestashop-installation",
+              "tutorials/opencart-installation"
             ]
           },
           {
             "group": "Core concepts",
             "pages": [
+              "concepts/building-blocks",
               "concepts/workflows",
               "concepts/jobs",
               "concepts/remediation",
@@ -33,20 +42,12 @@
           {
             "group": "The Element",
             "pages": [
+              "element/overview",
               "element/installation",
               "element/create-and-mount",
               "element/events",
               "element/presentation",
               "element/connectors"
-            ]
-          },
-          {
-            "group": "Integrations",
-            "pages": [
-              "integrations/woocommerce",
-              "integrations/shopify",
-              "integrations/opencart-prestashop",
-              "integrations/headless"
             ]
           },
           {
@@ -77,17 +78,24 @@
             ]
           },
           {
-            "group": "Install a plugin",
+            "group": "Admin guide",
             "pages": [
-              "tutorials/wordpress-installation",
-              "tutorials/prestashop-installation",
-              "tutorials/opencart-installation",
-              "tutorials/shopify-installation"
+              "configuration/overview",
+              "configuration/preflight",
+              "configuration/upload-rules",
+              "configuration/workflows",
+              "configuration/jobs",
+              "configuration/presets",
+              "configuration/connectors"
             ]
           },
           {
-            "group": "Custom integration",
+            "group": "Developer integrations",
             "pages": [
+              "integrations/woocommerce",
+              "integrations/shopify",
+              "integrations/opencart-prestashop",
+              "integrations/headless",
               "tutorials/api-integration"
             ]
           }
@@ -100,7 +108,8 @@
           {
             "group": "Overview",
             "pages": [
-              "api-reference/introduction"
+              "api-reference/introduction",
+              "api-reference/authentication"
             ]
           },
           {

@@ -1,83 +1,93 @@
 ---
 title: "Quickstart"
-description: "Embed the Filecheck Element, gate a submit button, and verify the result. From zero to a working integration."
+description: "How to sign up, connect your e-commerce store, and start gating and auto-fixing uploads in under 10 minutes."
 ---
 
-This guide takes you from zero to a working upload gate. You will embed the Element, block your submit button until a file passes, and learn where to verify the result server-side.
+Welcome to Filecheck! This guide takes you step-by-step from creating your account to verifying your first successful, print-ready checkout. No deep programming knowledge is required.
 
-## Prerequisites
+## Step 1: Sign up and retrieve your keys
 
-Before you begin, you need:
+First, create your workspace environment where you will manage your preflight profiles and workflows.
 
-- A Filecheck account ([sign up](https://admin.filecheck.io)).
-- A **publishable key** (`pk_live_…` or `pk_test_…`). See [Authentication](/authentication).
-- A **Workflow** configured in the admin, which gives you a `workflowId` (`wf_…`). See [Workflows](/concepts/workflows).
+1. Go to **[admin.filecheck.io](https://admin.filecheck.io)** and click **Sign Up** to create your free account.
+2. Once registered, your account is automatically provisioned with 20 free test credits so you can start testing immediately.
+3. In the left navigation sidebar of your dashboard, click **Settings** (or **Developer Settings**).
+4. Copy your **Publishable key** (`pk_live_…` / `pk_test_…`) and your **Secret key** (`sk_live_…` / `sk_test_…`). Keep your secret key secure!
 
-## Get started
+---
 
-<Steps>
-  <Step title="Add the Element to your page">
-    Load the script and add a mount point where the widget should appear.
+## Step 2: Install the Filecheck plugin on your store
 
-    ```html
-    <script src="https://cdn.filecheck.io/element/v1/filecheck.js"></script>
+Filecheck integrates seamlessly into every major e-commerce platform. Choose the installation guide for your specific store:
 
-    <div id="fc-slot"></div>
-    <button id="checkout" disabled>Add to cart</button>
-    ```
+<CardGroup cols={2}>
+  <Card title="WordPress / WooCommerce" icon="wordpress" href="/tutorials/wordpress-installation">
+    Install our lightweight WooCommerce plugin and configure key options in minutes.
+  </Card>
+  <Card title="Shopify App" icon="shopify" href="/tutorials/shopify-installation">
+    Connect your Shopify store using theme app blocks and metafield settings.
+  </Card>
+  <Card title="PrestaShop Module" icon="bag-shopping" href="/tutorials/prestashop-installation">
+    Upload the PrestaShop module ZIP and easily require validated uploads.
+  </Card>
+  <Card title="OpenCart Extension" icon="cart-shopping" href="/tutorials/opencart-installation">
+    Install our OpenCart extension to gate the product page Add to Cart button.
+  </Card>
+</CardGroup>
 
-    <Note>
-      Loading the script without `async` means `window.Filecheck` is ready for the inline script below. For async loading, see [Installation](/element/installation).
-    </Note>
-  </Step>
-  <Step title="Mount the Element and gate your button">
-    Create an `intake` element for your Workflow, mount it, and disable the submit button until `canProceed` is `true`.
+---
 
-    ```html
-    <script>
-      const fc = Filecheck('pk_live_…');
+## Step 3: Set up a default workflow
 
-      const intake = fc.elements.create('intake', {
-        workflowId: 'wf_…',
-        presentation: 'inline'
-      });
+A **Workflow** determines exactly how files uploaded to your store are checked and corrected. Filecheck comes pre-loaded with standard templates so you do not have to build from scratch.
 
-      intake.mount('#fc-slot');
+1. Go to the **Workflows** tab in your Filecheck dashboard.
+2. Review our gallery of pre-loaded product templates (e.g., *Business Cards*, *Large Format Posters*, or *Apparel*).
+3. Click **Use Template** on a workflow matching your store's primary product, or click **New Workflow**, then save it.
+4. Once your API keys are saved in your store's plugin settings, Filecheck will automatically load all your active workflows.
+5. In your store's admin, edit the product you want to enable Filecheck on, and select your desired workflow from the dropdown list.
 
-      intake.on('status', ({ canProceed, jobId }) => {
-        document.querySelector('#checkout').disabled = !canProceed;
-        document.querySelector('#fc-job-id').value = jobId ?? '';
-      });
-    </script>
-    ```
+---
 
-    <Warning>
-      The option is `workflowId` (a `wf_…` id), not `ruleId`. Gate on `canProceed` directly. Do not re-derive it from `status` or `files`. See [Status payload](/reference/status-payload).
-    </Warning>
-  </Step>
-  <Step title="Persist the job and verify server-side">
-    Write the `jobId` into a hidden field, attach it to the order, then use your **secret key** to fetch the result after purchase.
+## Step 4: Run a test order
 
-    ```bash
-    curl https://api.filecheck.io/jobs/{jobId} \
-      -H "Authorization: Bearer sk_live_…"
-    ```
+Now let's verify that your upload gate is working correctly.
 
-    See [Verify jobs](/server/verify-jobs).
-  </Step>
-</Steps>
+1. Go to your store frontend and open a product page where Filecheck is enabled.
+2. You will see the **Filecheck Upload Element** loaded on the page. Notice that the **Add to cart** button is disabled.
+3. Try uploading a test PDF or image:
+   - If the file has no issues, it will pass preflight immediately and the **Add to cart** button will enable.
+   - If the file has issues (like missing bleed or RGB colors), Filecheck will attempt to **auto-correct** it, show a **Soft-Proof** preview, and wait for your approval. Once approved, the button enables!
+4. Complete a test purchase through your checkout.
+
+---
+
+## Step 5: Download your print-ready files
+
+After completing the checkout, the finished, high-quality production files are stored safely and ready for fulfillment. You can download them in two ways:
+
+<CardGroup cols={2}>
+  <Card title="Your e-commerce dashboard" icon="store">
+    Open the newly placed test order inside your platform admin panel (**WooCommerce, Shopify, PrestaShop, or OpenCart**). The optimized job is directly attached to the order. Click to download the final print-ready PDF!
+  </Card>
+  <Card title="The Filecheck portal" icon="receipt">
+    Open the **Jobs** tab at **[admin.filecheck.io/jobs](https://admin.filecheck.io/jobs)**. Here, you will see a list of every file check run. Select your test job to view its full preflight report and download its final output.
+  </Card>
+</CardGroup>
+
+---
 
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="Use a no-code plugin" icon="puzzle-piece" href="/integrations/woocommerce">
-    WooCommerce, Shopify, OpenCart, and PrestaShop.
+  <Card title="Admin guide" icon="sliders" href="/configuration/overview">
+    Learn how to customize Preflight Profiles, Upload Rules, and Workflows.
   </Card>
-  <Card title="Element API" icon="cube" href="/element/create-and-mount">
-    All create options, methods, and events.
+  <Card title="Custom developer integration" icon="code" href="/tutorials/api-integration">
+    Need a custom setup? Build a headless integration or embed the Element manually.
   </Card>
 </CardGroup>
 
 <Tip>
-  Need help? Reach out at [support@filecheck.io](mailto:support@filecheck.io).
+  Need help? Reach out at [support@filecheck.io](mailto:support@filecheck.io) or join our [Discord channel](https://discord.gg/XNdtdFxNdE).
 </Tip>

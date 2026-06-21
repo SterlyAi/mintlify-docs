@@ -3,7 +3,35 @@ title: "Tutorials"
 description: "Install Filecheck on your store and learn how to use the admin."
 ---
 
-These tutorials cover two things: installing a Filecheck plugin on your store, and using the admin to build the workflows, profiles, presets, validations, and jobs that power it.
+These tutorials cover two things: installing a Filecheck plugin on your store, and using the admin to build the workflows, upload rules, preflight profiles, and presets that power it.
+
+## Admin guide
+
+Configure the building blocks in your Library, then wire them together in a Workflow. New to the model? Start with [Building blocks](/concepts/building-blocks).
+
+<CardGroup cols={2}>
+  <Card title="Admin guide overview" icon="sliders" href="/configuration/overview">
+    How the admin is laid out and the order to build in.
+  </Card>
+  <Card title="Create a Preflight Profile" icon="magnifying-glass" href="/configuration/preflight">
+    The checks that decide if a file is print-ready (PDF or Raster).
+  </Card>
+  <Card title="Create a Rule" icon="upload" href="/configuration/upload-rules">
+    Cardinality, file types, and the profile or validation per type.
+  </Card>
+  <Card title="Build a Workflow" icon="diagram-project" href="/configuration/workflows">
+    Assign a rule at intake; trigger and shape the processing.
+  </Card>
+  <Card title="Jobs & output" icon="receipt" href="/configuration/jobs">
+    Find results, download output, run a one-off job.
+  </Card>
+  <Card title="Optimization Presets" icon="wand-magic-sparkles" href="/configuration/presets">
+    Force a PDF or Raster into a target shape.
+  </Card>
+  <Card title="Connectors" icon="link" href="/configuration/connectors">
+    Map file facts onto your product-page controls.
+  </Card>
+</CardGroup>
 
 ## Install a plugin
 
@@ -29,7 +57,3 @@ The WordPress, PrestaShop, and OpenCart plugins are available now, and each guid
 <Card title="Custom API / SDK" icon="code" href="/tutorials/api-integration">
   No plugin? Embed the Element or call the REST API directly.
 </Card>
-
-<Note>
-  Admin guides, building workflows, preflight profiles, optimize presets, validations, and jobs in the dashboard, are on the way. Check back soon.
-</Note>

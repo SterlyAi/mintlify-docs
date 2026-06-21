@@ -1,11 +1,11 @@
 ---
 title: "Introduction"
-description: "Filecheck is a preflight and policy layer for file uploads. Inspect, validate, and auto-fix PDFs, images, and documents before they reach your storage."
+description: "Filecheck is a real-time preflight, validation, and policy layer for file uploads. Automatically inspect, auto-correct, and proof PDFs, images, and documents before they ever reach your storage."
 ---
 
-Filecheck sits in front of your "Upload" button and decides, by a rule you configure, whether a file is fit for purpose. When it can, it fixes the file automatically.
+Slipped in front of any upload button, **Filecheck** acts as an automated inspection, correction, and routing engine. It determines, by workflows you configure, whether a file is fit for purpose, fixes errors automatically where possible, and secures your checkout pipeline.
 
-A merchant configures a **Workflow** in the Filecheck admin (which files are accepted, what validation runs, what to do on failure). You drop the **Element** onto your page; it runs the customer's file through that Workflow and gates the submit button until the file passes.
+A merchant configures a **Workflow** in the Filecheck admin (defining accepted formats, validation rules, and automated corrections). You embed the **Element** (our front-end widget) on your product page, cart, or upload form. It runs the customer's file through that Workflow in milliseconds, presenting them with interactive feedback and gating your submit button on the **`canProceed`** status.
 
 <CardGroup cols={2}>
   <Card title="Quickstart" icon="rocket" href="/quickstart">
@@ -14,34 +14,59 @@ A merchant configures a **Workflow** in the Filecheck admin (which files are acc
   <Card title="The Element" icon="cube" href="/element/installation">
     Load the script, mount the widget, and listen for status events.
   </Card>
-  <Card title="Integrations" icon="plug" href="/integrations/woocommerce">
+  <Card title="Integrations" icon="plug" href="/tutorials/overview">
     Drop-in plugins for WooCommerce, Shopify, OpenCart, and PrestaShop.
   </Card>
   <Card title="API reference" icon="terminal" href="/api-reference/introduction">
-    Fetch job results and wire up webhooks server-side.
+    Fetch job results, run headless jobs, and handle webhook events.
   </Card>
 </CardGroup>
 
+---
+
+## Core capabilities
+
+Filecheck provides everything you need to gate, correct, and route uploads in a single serverless cloud stack:
+
+<CardGroup cols={2}>
+  <Card title="Instant Upload Gating" icon="shield-halved">
+    Check uploads synchronously while customers wait. Clean files pass through, minor warnings are logged, and invalid files are rejected with clear explanation messages so you protect quality without losing sales.
+  </Card>
+  <Card title="Remediation Over Rejection" icon="wand-magic-sparkles">
+    Avoid turning customers away over missing bleed, RGB colors, or flat transparent layers. Filecheck automatically resolves problems like RGB-to-CMYK conversions, font embedding, and image scaling on the fly.
+  </Card>
+  <Card title="Integrated Soft-Proofing" icon="image">
+    Generate interactive, high-fidelity visual previews reflecting your automated crops, bleed extensions, and color corrections. Allow customers to view and approve their proofs directly on the upload screen.
+  </Card>
+  <Card title="Preflight vs. Validation" icon="scale-balanced">
+    Run tailored preflight checks (for physical print or manufacturing layouts) or perform strict compliance checks against official archiving standards (like ISO PDF/A and PDF/UA accessibility specifications).
+  </Card>
+</CardGroup>
+
+---
+
 ## How it works
+
+Every file's journey through Filecheck follows a clear five-step path:
 
 <Steps>
   <Step title="Customer uploads a file">
-    The Element accepts the file on your product page, checkout, or form.
+    The **Element** accepts files on your front-end. It supports direct uploads of PDFs, raster images (JPEG, PNG, TIFF), vector assets, and standard office formats.
   </Step>
-  <Step title="Filecheck inspects and validates">
-    The file is measured and checked against the Workflow's rules in seconds.
+  <Step title="Filecheck inspects and validates (Intake)">
+    The file is uploaded directly to our secure sandbox and inspected in milliseconds against your [Upload Rule](/configuration/upload-rules). The results decide if the file can be safely accepted.
   </Step>
-  <Step title="Issues are fixed where possible">
-    Remediation runs for common problems (RGB to CMYK, missing bleed, font embedding, and more). See [Remediation](/concepts/remediation).
+  <Step title="Customer signs off on the proof">
+    If [Soft-proofing](/concepts/soft-proofing) is active, an interactive proofing layout is presented to the user. The checkout or form's submit button remains gated until they click approve.
   </Step>
-  <Step title="The customer signs off (optional)">
-    If proofing is enabled, the customer approves a visual soft-proof before continuing. See [Soft-proofing](/concepts/soft-proofing).
+  <Step title="Heavy processing runs (Processing)">
+    Once a trigger event fires (such as checkout completion or manual admin approval), the [Workflow](/configuration/workflows) processes the files downstream. Filecheck performs [remediation](/concepts/remediation) fixes, downsamples images with **Optimization Presets**, splits or merges sheets, and formats your production package.
   </Step>
-  <Step title="You gate on the result">
-    Gate your submit button on `canProceed`, then attach the `jobId` to the order for server-side verification.
+  <Step title="Secure your assets">
+    The finalized, print-ready or validated production file is bundled and delivered directly to your connected storage (such as Amazon S3, Uploadcare, or your e-commerce order).
   </Step>
 </Steps>
 
 <Note>
-  New to the concepts? Start with [Workflows](/concepts/workflows) and [Jobs](/concepts/jobs).
+  New to Filecheck? Learn how our system connects by checking out our [Building blocks guide](/concepts/building-blocks).
 </Note>

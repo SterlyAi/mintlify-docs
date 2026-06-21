@@ -1,0 +1,82 @@
+---
+title: "Create a Preflight Profile"
+description: "Build a reusable set of checks that decide whether an uploaded file is print-ready — and what to do when it isn't."
+---
+
+A **Preflight Profile** answers one question: *what makes a file acceptable for this product?* It's a named collection of **checks** — color, bleed, fonts, resolution, structure — and each check has an action to take when it fails. Profiles live in **Library → Preflight Profiles**, and a single profile can be reused by many [Rules](/configuration/upload-rules).
+
+## Two kinds: PDF and Raster
+
+A profile is tied to a file family, because PDF and raster images are checked in completely different ways.
+
+<CardGroup cols={2}>
+  <Card title="PDF profile" icon="file-pdf">
+    For PDF uploads. Checks page geometry, color, fonts, images, and PDF structure.
+  </Card>
+  <Card title="Raster profile" icon="image">
+    For image uploads (JPEG, PNG, TIFF). Checks resolution, color mode, dimensions, and aspect.
+  </Card>
+</CardGroup>
+
+When you create a profile you choose which kind to build:
+
+<Frame caption="Library → Preflight Profiles → New Preflight Profile">
+  <img src="/images/new-preflight-profile-menu.png" alt="New Preflight Profile menu showing New PDF Profile and New Raster Profile options" />
+</Frame>
+
+## Create one
+
+The fastest start is to clone a pre-loaded profile (PDF/X-4 Compliant, Print-Ready PDF, Photo Print, and more) and adjust it, rather than building from scratch.
+
+<Steps>
+  <Step title="Open the Library">
+    Go to **Library → Preflight Profiles**. Use the **All / PDF / Raster** filter to narrow the list.
+  </Step>
+  <Step title="Clone or create">
+    Click the **clone** icon on a profile close to what you want, or **New Preflight Profile** and choose **New PDF Profile** or **New Raster Profile**. Give it a clear name.
+  </Step>
+  <Step title="Configure the checks">
+    Work through the sections, enabling the checks you need and setting their target values and actions (below).
+  </Step>
+  <Step title="Save">
+    Click **Save**. The profile is now selectable from any Rule of the matching kind.
+  </Step>
+</Steps>
+
+## The checks (PDF profile)
+
+PDF checks are organized into sections. Each section shows how many checks are active.
+
+| Section | What it covers |
+| --- | --- |
+| **Page Checks** | Page count, trim/page size, orientation, bleed |
+| **Color** | Color space (RGB/CMYK), total ink density, spot colors |
+| **Fonts & Text** | Font embedding, minimum text size |
+| **Images** | Effective resolution (DPI), compression, color mode |
+| **PDF Structure** | PDF version, encryption, layers, annotations |
+
+A **Raster profile** uses a single image-focused section instead — resolution, dimensions, color mode, and aspect ratio.
+
+## Each check: target + action
+
+Toggle a check on to reveal its settings. Every check has two parts:
+
+<CardGroup cols={2}>
+  <Card title="Target" icon="bullseye">
+    The acceptable value or range — for example bleed **Required 3 mm**, **Tolerance 0.2 mm**, on which **Sides** (All / Top / Right / Bottom / Left).
+  </Card>
+  <Card title="Action (severity)" icon="bolt">
+    What happens when the file misses the target:
+    <br />**Reject** — block the file.
+    <br />**Warn** — let it proceed, flagged.
+    <br />**Info / Fix** — note it, or auto-correct downstream.
+  </Card>
+</CardGroup>
+
+<Note>
+  The action is what links a profile to [remediation](/concepts/remediation). A failing check set to **Reject** blocks the file at intake; **Warn** lets it through with a warning; findings marked for auto-fix are corrected later, in the workflow's processing stage.
+</Note>
+
+<Card title="Next: use this profile in a Rule" icon="arrow-right" href="/configuration/upload-rules">
+  Assign the profile to a Rule so it runs against uploads at intake.
+</Card>

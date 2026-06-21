@@ -12,10 +12,13 @@ description: "Install the Filecheck module and require validated uploads on prod
     Upload and install the Filecheck extension from **Extensions → Installer**, then enable it under **Extensions → Modules**.
   </Step>
   <Step title="Add your keys">
-    In the module settings, enter your **publishable key**, **secret key**, optional **agent ID**, and a default **workflowId** from the [dashboard](https://admin.filecheck.io).
+    In the module settings, enter your **publishable key** and **secret key** from the [dashboard](https://admin.filecheck.io). Save. Once saved, your active workflows will automatically load as a dropdown.
+  </Step>
+  <Step title="Choose a default workflow">
+    Select your default **Workflow** from the dropdown menu to apply it across your catalog.
   </Step>
   <Step title="Enable per product">
-    On a product, enable Filecheck and optionally override the workflow or connector. The Element renders on the product page and gates **Add to cart** until a file passes.
+    On a product edit screen, enable Filecheck, tick **Require upload**, and select the specific workflow from the loaded dropdown list (or leave empty to inherit the default). The Element renders on the product page and gates **Add to cart** until a file passes.
   </Step>
   <Step title="Verify after purchase">
     Use your secret key server-side to fetch the job and download the validated file. See [Verify jobs](/server/verify-jobs).

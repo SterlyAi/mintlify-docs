@@ -1,0 +1,61 @@
+---
+title: "Create an Optimization Preset"
+description: "A reusable transform that forces a PDF or Raster file into a target shape — independent of preflight."
+---
+
+An **Optimization Preset** is a standalone transform that forces a file into a defined target shape. Unlike a [Preflight Profile](/configuration/preflight), a preset doesn't *judge* whether a file passes — it **reshapes** the file. Presets live in **Library → Optimization Presets** and are independent of the rule/profile chain.
+
+## Profile vs Preset
+
+<CardGroup cols={2}>
+  <Card title="Preflight Profile" icon="magnifying-glass">
+    Inspects a file against checks and reports pass / warn / reject. Runs at **intake**, while the customer waits.
+  </Card>
+  <Card title="Optimization Preset" icon="wand-magic-sparkles">
+    Unconditionally transforms a file to a target shape. Runs in **processing**, or on demand as a job.
+  </Card>
+</CardGroup>
+
+## What a preset can do
+
+A preset bundles any of these transforms:
+
+| Transform | What it does |
+| --- | --- |
+| **Scale images** | Downsample images to a target resolution (e.g. 300 DPI). |
+| **Compression** | Re-encode images — JPEG/JPEG2000 quality, JBIG2/CCITT for bitonal. |
+| **Color conversion** | Convert to a target space (e.g. CMYK), handle spot colors and overprint. |
+| **Gray to 1-bit** | Convert grayscale to bitonal (optionally Otsu). |
+| **Text to outlines** | Outline text — all, or non-embedded only. |
+| **Flatten layers** | Flatten optional content (layers) into a single layer. |
+| **Hairlines** | Thicken thin strokes to a minimum width (e.g. 0.25 pt). |
+| **Strip** | Remove thumbnails, annotations, form fields, JavaScript, attachments, private data, and more. |
+
+## Create one
+
+<Steps>
+  <Step title="Create the preset">
+    Go to **Library → Optimization Presets** and create a new preset. Name it for its purpose (e.g. *Web-safe 150 DPI*, *Press CMYK 300*).
+  </Step>
+  <Step title="Enable the transforms you need">
+    Turn on each transform and set its parameters — target resolution, color target, JPEG quality, minimum hairline width, and so on. Everything left off passes through untouched.
+  </Step>
+  <Step title="Save">
+    Save the preset so it can be applied where a forced transform is needed.
+  </Step>
+</Steps>
+
+## Where presets are used
+
+<CardGroup cols={2}>
+  <Card title="In a Workflow" icon="gears">
+    Select the preset in a workflow's **optimize** step. Files are reshaped during processing, after the trigger.
+  </Card>
+  <Card title="As a one-off job" icon="bolt">
+    Run **Optimize a PDF File** from the [Jobs](/configuration/jobs) screen to apply a preset to a single file and download the result immediately.
+  </Card>
+</CardGroup>
+
+<Note>
+  Because presets are independent, the same preset can be reused anywhere a forced output is required, without being tied to a specific rule or workflow.
+</Note>

@@ -12,13 +12,13 @@ description: "Install the Filecheck plugin, add your keys, and gate add-to-cart 
     In **WP Admin → Plugins → Add New**, upload the Filecheck plugin ZIP (or search for it in the directory), then click **Activate**.
   </Step>
   <Step title="Add your keys">
-    Go to **WooCommerce → Settings → Filecheck** and enter your **publishable key**, **secret key**, and optional **agent ID** from the [dashboard](https://admin.filecheck.io). Save.
+    Go to **WooCommerce → Settings → Filecheck** and enter your **publishable key** and **secret key** from the [dashboard](https://admin.filecheck.io). Save. Once saved, your active workflows will automatically sync to your WordPress site.
   </Step>
   <Step title="Choose a default workflow">
-    Pick a default **Workflow** for the store. This is the rule files are checked against. See [Workflows](/concepts/workflows).
+    Select a default **Workflow** from the dropdown options. This sets the default rule files are checked against across your shop. See [Workflows](/concepts/workflows).
   </Step>
   <Step title="Enable Filecheck on a product">
-    Edit a product, open the **Filecheck** panel, tick **Require an upload**, and optionally override the workflow or presentation (inline vs dialog) for that product.
+    Edit a product, open the **Filecheck** panel, tick **Require an upload**, and choose the workflow from the dropdown list (or leave it to use the default) and set the presentation mode (inline vs dialog) for that product.
   </Step>
   <Step title="Test the gate">
     Open the product page. The **Add to cart** button stays disabled until an uploaded file passes. Upload a test file, watch it validate, and confirm the button enables. The validated `jobId` is attached to the order.

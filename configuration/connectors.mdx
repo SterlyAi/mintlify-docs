@@ -1,0 +1,31 @@
+---
+title: "Configure a Connector"
+description: "Map facts Filecheck derives from a file onto your product page's own controls — no custom code."
+---
+
+A **Connector** maps facts Filecheck derives about a file (page count, dimensions, area) onto your product page's own controls (quantity, width, height, size). You author it in **Library → Connectors**; the [Element](/element/connectors) writes the values into the page on every status update. Connectors are independent Library objects — they don't affect whether a file passes, only what your store reads from it.
+
+<Steps>
+  <Step title="Create the connector">
+    Go to **Library → Connectors** and create a new connector. Give it a descriptive title (e.g. *Canvas size sync*).
+  </Step>
+  <Step title="Add bindings">
+    Each binding maps a **source** fact to a **control** on your product page:
+
+    | Source | Typical control | Example |
+    | --- | --- | --- |
+    | `pageCount` | quantity | A 10-page PDF = 10 prints |
+    | `width` / `height` | width / height inputs | Fill canvas/banner dimensions |
+    | `area` | area | Price by square area |
+  </Step>
+  <Step title="Set units and rounding">
+    Dimensional sources are in millimetres. Set **convertTo** (mm / cm / in / pt), **decimals**, and **rounding** per binding. For theme-specific markup, add a **custom selector**.
+  </Step>
+  <Step title="Save">
+    Save the connector. Reference it from the Element by `connectorId`, or pass the JSON inline.
+  </Step>
+</Steps>
+
+<Card title="Element connectors reference" icon="code" href="/element/connectors">
+  Binding shape, runtime methods, and the full config schema.
+</Card>

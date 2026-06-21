@@ -1,30 +1,48 @@
 ---
 title: "Jobs"
-description: "A job is one run of a file (or set of files) through a Workflow. Gate on its canProceed flag."
+description: "A Job is a single execution run of one or more files through Filecheck. Gate checkout on the job's canProceed flag."
 ---
 
-A **job** is a single run of one or more files through a [Workflow](/concepts/workflows). Each job has an id (`job_…`) and emits [status events](/reference/status-payload) as it progresses.
+A **Job** (`job_…`) represents a single transactional run of a file or set of files through a validation, preflight, or optimization pipeline. 
 
-## Statuses
+Jobs are generated automatically when customer uploads flow through a storefront **Workflow**, but they can also be initiated manually by administrators for instant preflight or optimization (saving you from running a workflow "ritual").
+
+As a job progresses, it emits interactive, real-time [status events](/reference/status-payload).
+
+## Job statuses
+
+Filecheck tracks the lifecycle of every file through standard statuses:
 
 | Status | Meaning |
 | --- | --- |
-| `idle` | No files yet (fires once at startup). |
-| `incomplete` | Fewer files than the Workflow requires. |
-| `uploading` | Files are uploading. |
-| `processing` | Validation and remediation are running. |
-| `ready` | All files passed. |
-| `partial` | Warnings only, or policy is accept-with-warnings. |
-| `rejected` | Hard failure. |
+| `idle` | No files uploaded yet (initial state). |
+| `incomplete` | Files have been added, but fewer than the Workflow's Upload Rule requires. |
+| `uploading` | Files are actively transferring to our secure sandbox. |
+| `processing` | Filecheck is running preflight, validation, and automated remediation. |
+| `ready` | The files successfully passed all checks. |
+| `partial` | Minor warnings occurred, but are acceptable according to the Upload Rule's `onFail` policy. |
+| `rejected` | One or more critical checks failed, blocking the file from proceeding. |
 
-## canProceed
+---
 
-`canProceed` is `true` only for `ready` and `partial`. Gate your submit button on this flag directly.
+## Gating with canProceed
+
+To protect your checkout pipeline, Filecheck exposes a simple **`canProceed`** boolean alongside the job status.
+- `canProceed` is `true` only when the job is in a `ready` or `partial` status.
+- When `canProceed` is `false`, your e-commerce plugin or custom submit button remains disabled.
 
 <Warning>
-  Do not re-derive `canProceed` from `status` or `files`. Filecheck already collapses the Workflow's `onFail` policy into it.
+  **Important Integration Guideline:** Never attempt to re-derive the `canProceed` flag by reading individual status values or raw file structures. Filecheck automatically evaluates the assigned Upload Rule's `onFail` policy and encapsulates it in `canProceed`. Always gate directly on this flag.
 </Warning>
 
-## Persisting the job
+---
 
-When `canProceed` is `true`, write the `jobId` into a hidden field and attach it to the order. After purchase, use your secret key to [fetch the result and download fixed files](/server/verify-jobs).
+## Persisting and retrieving job output
+
+When `canProceed` is `true`, the browser receives a finalized `jobId`. 
+1. **At Checkout**: The `jobId` is passed and stored as meta-data on the customer's order.
+2. **Post-Purchase Fulfillment**: The validated, fixed, or optimized production files can be retrieved in two ways:
+   - **E-commerce Dashboard**: Attached directly to the WooCommerce, Shopify, OpenCart, or PrestaShop order page for immediate download.
+   - **Filecheck Portal**: Searched and downloaded under the **Jobs** tab at **[admin.filecheck.io/jobs](https://admin.filecheck.io/jobs)**.
+   - **REST API**: Downloaded programmatically via `GET /jobs/{id}` using your secret key. See [Verify jobs](/server/verify-jobs).
+

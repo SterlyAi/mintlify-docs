@@ -1,0 +1,86 @@
+---
+title: "Create a Rule"
+description: "A Rule is the intake gate — what customers may upload, how many files, and how each file is checked while they wait."
+---
+
+A **Rule** is the customer-facing **intake gate**. It describes what a customer is allowed to upload for a given product, drop-zone, or API endpoint, and decides — *synchronously, while the customer waits* — whether each file is accepted, accepted with warnings, or rejected.
+
+A Rule covers exactly four things: **cardinality** (how many files), **acceptance** (which file types), **preflight** (the check to run per type), and **onFail** (what to do when a check fails). It does not describe what happens after acceptance — fixing, optimizing, merging, exporting all belong to the [Workflow](/configuration/workflows). Rules live in **Library → Upload Rules**.
+
+<Frame caption="Library → Upload Rules">
+  <img src="/images/library-upload-rules.png" alt="Upload Rules list in the Library with file types and clone-template actions" />
+</Frame>
+
+## Create one
+
+<Steps>
+  <Step title="Open the Library">
+    Go to **Library → Upload Rules**. Clone a **template** that's close to your product, or click **New Upload Rule**.
+  </Step>
+  <Step title="Name it and add instructions">
+    Give the rule a clear **title**. The optional **upload instructions** are shown to customers in the upload area.
+  </Step>
+  <Step title="Set cardinality">
+    Choose how many files the customer must provide (below).
+  </Step>
+  <Step title="Accept file types">
+    Add each file type you accept, with an optional max size and an optional check (below).
+  </Step>
+  <Step title="Save">
+    Click **Save**. The rule can now be assigned to a Workflow.
+  </Step>
+</Steps>
+
+<Frame caption="Edit Upload Rule — cardinality and accepted file types">
+  <img src="/images/edit-upload-rule.png" alt="Edit Upload Rule form showing count range, file type, preflight profile selection, and on-fail policy" />
+</Frame>
+
+## Cardinality: how many files
+
+**Cardinality** is how many files the rule requires and allows. Two modes:
+
+<CardGroup cols={2}>
+  <Card title="Count range" icon="hashtag">
+    A **MIN** and **MAX** — for example 1–1 for a single artwork, or 1–4 to allow up to four. The customer must provide at least MIN before the job can proceed.
+  </Card>
+  <Card title="Named slots" icon="list-ol">
+    A defined role per file — for example *Front* and *Back* for a double-sided card. Each slot is its own labelled drop target.
+  </Card>
+</CardGroup>
+
+## Accepted file types
+
+Click **Add File Type** for each type you accept (PDF, PNG, JPG…), and optionally set a **max file size**. For each type you can decide whether — and how — to check the file.
+
+### Preflight or validation
+
+Toggle **Run a preflight or a validation check against uploaded file**, then pick what runs. This is the only check performed while the customer waits, so it stays fast; heavier transforms happen later in the Workflow.
+
+<CardGroup cols={2}>
+  <Card title="Preflight against a Profile" icon="magnifying-glass">
+    Choose a [Preflight Profile](/configuration/preflight) — a **PDF** type lists PDF profiles, a raster type lists Raster profiles. The file is checked against that profile's checks.
+  </Card>
+  <Card title="Validation against a standard" icon="circle-check">
+    Choose a conformance standard instead — **PDF/A** (1a–4f) or **PDF/UA** (accessibility). The file is validated for conformance rather than checked against your custom profile.
+  </Card>
+</CardGroup>
+
+<Note>
+  Preflight and validation are mutually exclusive per file type — you pick one. Only PDF and raster types can be checked; other types (vector, office) are converted to PDF at intake and processed downstream.
+</Note>
+
+### If the check fails
+
+Set the **onFail** policy per file type:
+
+| Policy | Result |
+| --- | --- |
+| **Reject** | The file is blocked; the customer can't proceed until it passes. |
+| **Accept with warnings** | The file proceeds, flagged with warnings. |
+| **Manual review** | The file is held for an admin to review before it proceeds. |
+
+This policy is what Filecheck collapses into the `canProceed` flag your store reads. See [Jobs](/concepts/jobs).
+
+<Card title="Next: add this Rule to a Workflow" icon="arrow-right" href="/configuration/workflows">
+  Assign the rule at a workflow's intake stage and define the processing that follows.
+</Card>
