@@ -7,15 +7,26 @@ description: "Install the Filecheck plugin, add your keys, and gate add-to-cart 
   Want to see it working first? Try the [live WordPress demo store](https://demos.wp.filecheck.io/), then install it on your own shop below.
 </Note>
 
+<Info>
+  The Filecheck plugin is awaiting approval on the WordPress.org directory. Until it lands there, install it manually with the release ZIP below.
+</Info>
+
+<Card title="Download the Filecheck plugin" icon="download" href="https://github.com/PrintApp/filecheck-wordpress/releases/latest/download/filecheck.zip">
+  Always grabs the latest `filecheck.zip` release.
+</Card>
+
+{/* MAINTAINER NOTE: Once the plugin is approved on the WordPress.org directory,
+    update this page: remove (or soften) the <Info> "awaiting approval" callout,
+    and change Step 1 back to installing from the directory — "In WP Admin →
+    Plugins → Add New, search for Filecheck, click Install Now, then Activate."
+    Keep the release-ZIP download card as a secondary/manual option. */}
+
 <Steps>
-  <Step title="Install the plugin">
-    In **WP Admin → Plugins → Add New**, upload the Filecheck plugin ZIP (or search for it in the directory), then click **Activate**.
+  <Step title="Download and install the plugin">
+    [Download the latest `filecheck.zip`](https://github.com/PrintApp/filecheck-wordpress/releases/latest/download/filecheck.zip). In **WP Admin → Plugins → Add New → Upload Plugin**, choose the ZIP, click **Install Now**, then **Activate**.
   </Step>
   <Step title="Add your keys">
-    Go to **WooCommerce → Settings → Filecheck** and enter your **publishable key** and **secret key** from the [dashboard](https://admin.filecheck.io). Save. Once saved, your active workflows will automatically sync to your WordPress site.
-  </Step>
-  <Step title="Choose a default workflow">
-    Select a default **Workflow** from the dropdown options. This sets the default rule files are checked against across your shop. See [Workflows](/concepts/workflows).
+    Go to **WooCommerce → Settings → Filecheck** and enter your **publishable key** and **secret key** from the [Dev Hub](https://admin.filecheck.io/devhub) (click **Copy PK** to copy the publishable key). Save. Once saved, your active workflows will automatically sync to your WordPress site.
   </Step>
   <Step title="Enable Filecheck on a product">
     Edit a product, open the **Filecheck** panel, tick **Require an upload**, and choose the workflow from the dropdown list (or leave it to use the default) and set the presentation mode (inline vs dialog) for that product.
@@ -24,6 +35,10 @@ description: "Install the Filecheck plugin, add your keys, and gate add-to-cart 
     Open the product page. The **Add to cart** button stays disabled until an uploaded file passes. Upload a test file, watch it validate, and confirm the button enables. The validated `jobId` is attached to the order.
   </Step>
 </Steps>
+
+<Note>
+  **Optional: store-wide default workflow.** You can set a default **Workflow** that is applied to every product automatically. Leave this unset while you are testing. On a live store a default takes effect everywhere at once, so the upload Element would appear on all products immediately. Enable Filecheck per product first, and only set a default once you are confident how it behaves. See [Workflows](/concepts/workflows).
+</Note>
 
 <Tip>
   Server-side, the plugin blocks add-to-cart when a required `jobId` is missing, and stores the job on the order. See the [WooCommerce integration reference](/integrations/woocommerce) for the hooks and the post-purchase file download.

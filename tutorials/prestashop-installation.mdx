@@ -7,15 +7,16 @@ description: "Install the Filecheck module and require validated uploads on prod
   Want to see it working first? Try the [live PrestaShop demo store](https://demos.ps.filecheck.io/), then install it on your own shop below.
 </Note>
 
+<Card title="Download the Filecheck module" icon="download" href="https://github.com/PrintApp/filecheck-prestashop/releases/latest/download/filecheck.zip">
+  Always grab the latest `filecheck.zip`. Built for **PrestaShop 9**.
+</Card>
+
 <Steps>
-  <Step title="Install the module">
-    In **Modules → Module Manager**, upload the Filecheck module ZIP and install it.
+  <Step title="Download and install the module">
+    [Download the latest `filecheck.zip`](https://github.com/PrintApp/filecheck-prestashop/releases/latest/download/filecheck.zip) (built for **PrestaShop 9**). In **Modules → Module Manager**, click **Upload a module**, select the ZIP, and install it.
   </Step>
   <Step title="Add your keys">
-    Open the module configuration, enter your **publishable key** and **secret key** from the [dashboard](https://admin.filecheck.io), and click save. Once saved, your active workflows automatically load into a dropdown list.
-  </Step>
-  <Step title="Choose a default workflow">
-    Select your default **Workflow** from the dropdown menu to apply it across your catalog.
+    Open the module configuration, enter your **publishable key** and **secret key** from the [Dev Hub](https://admin.filecheck.io/devhub) (click **Copy PK** to copy the publishable key), and click save. Once saved, your active workflows automatically load into a dropdown list.
   </Step>
   <Step title="Enable per product">
     On a product configuration screen, enable Filecheck, require an upload, and choose the workflow from the dropdown list (or leave it blank to use the store default). The Element renders on the product page and gates **Add to cart** until a file passes.
@@ -24,6 +25,10 @@ description: "Install the Filecheck module and require validated uploads on prod
     Use your secret key server-side to fetch the job and download the validated file. See [Verify jobs](/server/verify-jobs).
   </Step>
 </Steps>
+
+<Note>
+  **Optional: store-wide default workflow.** You can set a default **Workflow** that is applied to every product automatically. Leave this unset while you are testing. On a live store a default takes effect everywhere at once, so the upload Element would appear on all products immediately. Enable Filecheck per product first, and only set a default once you are confident how it behaves. See [Workflows](/concepts/workflows).
+</Note>
 
 <Tip>
   OpenCart and PrestaShop share the same front-end snippet. See the [OpenCart &amp; PrestaShop reference](/integrations/opencart-prestashop).

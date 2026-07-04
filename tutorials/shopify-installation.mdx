@@ -1,27 +1,40 @@
 ---
 title: "Shopify installation"
-description: "The Filecheck Shopify app is coming soon."
+description: "Install the Filecheck app, map a workflow to a product, and gate add-to-cart. No keys, no code."
 ---
 
 <Note>
-  The Filecheck Shopify app is launching soon. In the meantime, you can add Filecheck to a Shopify store with the [Element and REST API](/tutorials/api-integration).
+  The Filecheck app is live on the [Shopify App Store](https://apps.shopify.com/filecheck). Installing it connects your store automatically — there are no API keys to copy and no code to write. Building something custom instead? You can also use the [Element and REST API](/tutorials/api-integration).
 </Note>
 
-When the app is available, this guide will cover:
+<Card title="Install Filecheck on Shopify" icon="shopify" href="https://apps.shopify.com/filecheck">
+  Get the app from the Shopify App Store.
+</Card>
 
 <Steps>
   <Step title="Install the app">
-    Install Filecheck from the Shopify App Store and enter your keys in its embedded admin.
+    Install Filecheck from the [Shopify App Store](https://apps.shopify.com/filecheck). Installation connects your store and provisions your account for you — there are no keys to copy or paste.
   </Step>
-  <Step title="Add the block to your product template">
-    Add the Filecheck app block to your product page and set the `workflowId`, or use a per-product `filecheck.workflowId` metafield.
+  <Step title="Start from onboarding">
+    Once installed, you are taken straight to the Filecheck admin dashboard and an onboarding screen. From here you can either assign the built-in **default workflow** to a product to test quickly, or create your own **Workflow** and assign it. Assigning a workflow to a product is called **mapping**.
+
+    <Frame>
+      <img src="/images/shopify-onboarding.png" alt="Filecheck admin onboarding screen shown right after installing the Shopify app" />
+    </Frame>
   </Step>
-  <Step title="Gate checkout">
-    The block disables **Add to cart** until a file passes and writes the `jobId` to the cart attributes.
+  <Step title="Map a workflow to a product">
+    Open **[Workflow Mappings](https://admin.filecheck.io/workflows/mappings)**. Your Shopify products are listed automatically (we sync them from your store). Click **Assign** next to a product and choose the **Workflow** to apply to it. Repeat for each product you want to gate.
   </Step>
-  <Step title="Verify after purchase">
-    On the `orders/paid` webhook, fetch the result with your secret key. See [Verify jobs](/server/verify-jobs).
+  <Step title="See it on the product page">
+    Visit a mapped product on your storefront. The Filecheck upload form appears automatically and **Add to cart** stays disabled until an uploaded file passes. Filecheck injects the form for you, so there are no theme edits to make.
+  </Step>
+  <Step title="Download your files">
+    After checkout, the validated, print-ready output is attached to the order in your Shopify admin, ready for fulfillment.
   </Step>
 </Steps>
 
-For the planned data flow, see the [Shopify integration reference](/integrations/shopify).
+<Note>
+  **Not seeing the upload form on a mapped product?** By default Filecheck loads a script that finds the right spot on your product page and injects the upload form automatically, so in almost all cases you do **not** need to touch your theme. In rare cases (~0.5%) where a theme does not follow standard conventions — for example, no standard cart form — you may need to add the **Filecheck app block** to your product template in the theme editor. If a mapped product still does not show the form, [contact us](mailto:support@filecheck.io) and we will check it for you or add the block to that product page.
+</Note>
+
+For the technical data flow behind the app, see the [Shopify integration reference](/integrations/shopify).

@@ -7,15 +7,27 @@ description: "Install the Filecheck module and require validated uploads on prod
   Want to see it working first? Try the [live OpenCart demo store](https://demos.oc.filecheck.io/), then install it on your own shop below.
 </Note>
 
+## Download the module
+
+<Warning>
+  OpenCart 3 and 4 use different builds, so download the ZIP that matches your store. Not sure which you run? Your OpenCart version is shown at the bottom of the admin dashboard.
+</Warning>
+
+<CardGroup cols={2}>
+  <Card title="OpenCart 4.x" icon="download" href="https://github.com/PrintApp/filecheck-opencart/releases/latest/download/filecheck-oc4.ocmod.zip">
+    Download `filecheck-oc4.ocmod.zip`.
+  </Card>
+  <Card title="OpenCart 3.x" icon="download" href="https://github.com/PrintApp/filecheck-opencart/releases/latest/download/filecheck-oc3.ocmod.zip">
+    Download `filecheck-oc3.ocmod.zip`.
+  </Card>
+</CardGroup>
+
 <Steps>
-  <Step title="Install the module">
-    Upload and install the Filecheck extension from **Extensions → Installer**, then enable it under **Extensions → Modules**.
+  <Step title="Download and install the module">
+    Download the ZIP matching your store version above (**OpenCart 4** or **OpenCart 3**). In the admin, upload and install it from **Extensions → Installer**, then enable it under **Extensions → Modules**.
   </Step>
   <Step title="Add your keys">
-    In the module settings, enter your **publishable key** and **secret key** from the [dashboard](https://admin.filecheck.io). Save. Once saved, your active workflows will automatically load as a dropdown.
-  </Step>
-  <Step title="Choose a default workflow">
-    Select your default **Workflow** from the dropdown menu to apply it across your catalog.
+    In the module settings, enter your **publishable key** and **secret key** from the [Dev Hub](https://admin.filecheck.io/devhub) (click **Copy PK** to copy the publishable key). Save. Once saved, your active workflows will automatically load as a dropdown.
   </Step>
   <Step title="Enable per product">
     On a product edit screen, enable Filecheck, tick **Require upload**, and select the specific workflow from the loaded dropdown list (or leave empty to inherit the default). The Element renders on the product page and gates **Add to cart** until a file passes.
@@ -24,6 +36,10 @@ description: "Install the Filecheck module and require validated uploads on prod
     Use your secret key server-side to fetch the job and download the validated file. See [Verify jobs](/server/verify-jobs).
   </Step>
 </Steps>
+
+<Note>
+  **Optional: store-wide default workflow.** You can set a default **Workflow** that is applied to every product automatically. Leave this unset while you are testing. On a live store a default takes effect everywhere at once, so the upload Element would appear on all products immediately. Enable Filecheck per product first, and only set a default once you are confident how it behaves. See [Workflows](/concepts/workflows).
+</Note>
 
 <Tip>
   OpenCart and PrestaShop share the same front-end snippet. See the [OpenCart &amp; PrestaShop reference](/integrations/opencart-prestashop).
