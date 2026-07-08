@@ -7,6 +7,10 @@ A **Rule** is the customer-facing **intake gate**. It describes what a customer 
 
 A Rule covers exactly four things: **cardinality** (how many files), **acceptance** (which file types), **preflight** (the check to run per type), and **onFail** (what to do when a check fails). It does not describe what happens after acceptance — fixing, optimizing, merging, exporting all belong to the [Workflow](/configuration/workflows). Rules live in **Library → Upload Rules**.
 
+<Frame caption="Where a Rule sits: the intake gate inside a workflow that's assigned to a product">
+  <iframe src="https://cdn.filecheck.io/videos/rule.html" title="How an Upload Rule works" loading="lazy" style={{ width: "100%", aspectRatio: "16 / 9", border: "0", borderRadius: "12px" }} />
+</Frame>
+
 <Frame caption="Library → Upload Rules">
   <img src="/images/library-upload-rules.png" alt="Upload Rules list in the Library with file types and clone-template actions" />
 </Frame>

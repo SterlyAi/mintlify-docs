@@ -5,6 +5,10 @@ description: "Build a reusable set of checks that decide whether an uploaded fil
 
 A **Preflight Profile** answers one question: *what makes a file acceptable for this product?* It's a named collection of **checks** — color, bleed, fonts, resolution, structure — and each check has an action to take when it fails. Profiles live in **Library → Preflight Profiles**, and a single profile can be reused by many [Rules](/configuration/upload-rules).
 
+<Frame caption="A profile is a reusable set of checks — each with a target and an action">
+  <iframe src="https://cdn.filecheck.io/videos/preflight.html" title="How a Preflight Profile works" loading="lazy" style={{ width: "100%", aspectRatio: "16 / 9", border: "0", borderRadius: "12px" }} />
+</Frame>
+
 ## Two kinds: PDF and Raster
 
 A profile is tied to a file family, because PDF and raster images are checked in completely different ways.
