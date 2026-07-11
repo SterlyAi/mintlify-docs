@@ -23,6 +23,13 @@ Filecheck tracks the lifecycle of every file through standard statuses:
 | `partial` | Minor warnings occurred, but are acceptable according to the Upload Rule's `onFail` policy. |
 | `rejected` | One or more critical checks failed, blocking the file from proceeding. |
 
+<Note>
+  **"Manual review" uploads.** When a Rule's [onFail policy](/configuration/upload-rules#if-the-check-fails) is **Manual review**, the file is accepted but held for an admin to approve before it proceeds.
+
+  {/* TODO(filecheck): confirm the status a held file carries and how canProceed behaves. */}
+  **TODO(filecheck): document the status value a held-for-review file reports, whether `canProceed` is `false` while held, and how it clears once an admin approves.**
+</Note>
+
 ---
 
 ## Gating with canProceed

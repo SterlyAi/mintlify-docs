@@ -12,7 +12,7 @@ interface IntakeStatusPayload {
             | 'uploading'
             | 'processing'
             | 'ready'       // all files passed
-            | 'partial'     // warnings only, or policy = accept_with_warnings
+            | 'partial'     // warnings only, accepted per the Rule's on-fail policy
             | 'rejected';   // hard fail
   terminal:   boolean;
   canProceed: boolean;      // gate your submit button on THIS

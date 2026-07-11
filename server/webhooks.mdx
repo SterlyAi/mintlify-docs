@@ -22,7 +22,12 @@ curl https://api.filecheck.io/jobs/{jobId}?expand=runs \
 ```
 
 <Note>
-  Verify webhook signatures and respond `2xx` quickly; do heavy work asynchronously.
+  Respond `2xx` quickly and do any heavy work asynchronously.
 </Note>
 
-{/* TODO: document the signing scheme and payload shape once finalized. */}
+<Warning>
+  **Signature verification — coming soon.** Verify each webhook's signature before trusting it. The signing scheme and full payload shape are being finalized.
+
+  {/* TODO(filecheck): document the signature header, signing/HMAC scheme, and the webhook payload shape once finalized. */}
+  **TODO(filecheck): publish the signing scheme (header + algorithm) and the webhook payload shape.**
+</Warning>

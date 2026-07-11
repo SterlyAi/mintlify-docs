@@ -71,6 +71,9 @@ Toggle **Run a preflight or a validation check against uploaded file**, then pic
 
 <Note>
   Preflight and validation are mutually exclusive per file type — you pick one. Only PDF and raster types can be checked; other types (vector, office) are converted to PDF at intake and processed downstream.
+
+  {/* TODO(filecheck): list the exact vector and office formats accepted for conversion (e.g. AI/EPS/SVG, DOCX/PPTX/…). */}
+  **TODO(filecheck): list the exact vector and office formats accepted for auto-conversion at intake.**
 </Note>
 
 ### If the check fails
@@ -84,6 +87,15 @@ Set the **onFail** policy per file type:
 | **Manual review** | The file is held for an admin to review before it proceeds. |
 
 This policy is what Filecheck collapses into the `canProceed` flag your store reads. See [Jobs](/concepts/jobs).
+
+<Note>
+  **Two layers decide the outcome.** Each check inside a Preflight Profile has its own [action](/configuration/preflight#the-four-actions) (Reject / Warn / Auto-fix / Off), and the Rule adds this overall **onFail** policy on top. When they disagree — for example a check set to **Reject** under a Rule set to **Accept with warnings** — the resolved outcome is:
+
+  {/* TODO(filecheck): confirm and document precedence. Does a check-level Reject always
+      block regardless of the Rule's onFail, or can onFail override it? State the rule of thumb. */}
+
+  **TODO(filecheck): document which layer wins when a check action and the Rule's onFail policy disagree.**
+</Note>
 
 <Card title="Next: add this Rule to a Workflow" icon="arrow-right" href="/configuration/workflows">
   Assign the rule at a workflow's intake stage and define the processing that follows.

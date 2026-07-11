@@ -53,10 +53,11 @@ There are two distinct types of profiles because different file formats require 
 2. Click **New Preflight Profile** and select either **New PDF Profile** or **New Raster Profile** (or clone an existing pre-loaded template).
 3. Name your profile clearly (e.g., *Standard Poster PDF* or *T-Shirt Raster*).
 4. Go through each check section and set your **Target** requirements (for example, bleed **Required 3 mm**).
-5. Assign an **Action** for each check to decide what happens if a file fails:
-   - **Reject**: Blocks the file immediately.
-   - **Warn**: Flags the file but lets the customer proceed.
-   - **Info / Fix**: Logs the issue or designates it to be repaired in the processing phase.
+5. Assign an **Action** for each check to decide what happens when a file misses the target. Every check uses one of the same [four actions](/configuration/preflight#the-four-actions):
+   - **Reject**: Blocks the file at intake. The customer must fix and re-upload.
+   - **Warn**: Flags the issue but lets the customer proceed.
+   - **Auto-fix**: Filecheck corrects the issue automatically in the workflow's processing phase.
+   - **Off**: The check is disabled (not evaluated).
 6. Click **Save**.
 
 ---

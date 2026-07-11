@@ -12,6 +12,13 @@ const fc = Filecheck('pk_live_…', {
 });
 ```
 
+<Note>
+  **`agentId` (sub-tenant scope).** Pass an `agentId` (`agt_…`) to scope the Element to a specific sub-tenant under your account — useful when one account serves multiple stores or brands. Leave it out to use your account default. The e-commerce plugins expose it as an optional setting.
+
+  {/* TODO(filecheck): confirm what an "agent"/sub-tenant is, when it's needed, and where to find an agentId in the admin. */}
+  **TODO(filecheck): define what an agent/sub-tenant is, when to use one, and where to obtain an `agentId` in the dashboard.**
+</Note>
+
 ## Create an intake element
 
 ```js
