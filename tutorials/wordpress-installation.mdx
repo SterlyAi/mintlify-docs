@@ -11,34 +11,32 @@ description: "Install the Filecheck plugin, add your keys, and gate add-to-cart 
   <iframe src="https://cdn.filecheck.io/videos/welcome-wp.html" title="Getting started with Filecheck" loading="lazy" style={{ width: "100%", aspectRatio: "16 / 9", border: "0", borderRadius: "12px" }} />
 </Frame>
 
-<Info>
-  The Filecheck plugin is awaiting approval on the WordPress.org directory. Until it lands there, install it manually with the release ZIP below.
-</Info>
-
-<Card title="Download the Filecheck plugin" icon="download" href="https://github.com/PrintApp/filecheck-wordpress/releases/latest/download/filecheck.zip">
-  Always grabs the latest `filecheck.zip` release.
+<Card title="Filecheck on the WordPress.org plugin directory" icon="wordpress" href="https://wordpress.org/plugins/filecheck/">
+  Official listing — install it straight from your WP admin, no download needed.
 </Card>
 
-{/* MAINTAINER NOTE: Once the plugin is approved on the WordPress.org directory,
-    update this page: remove (or soften) the <Info> "awaiting approval" callout,
-    and change Step 1 back to installing from the directory — "In WP Admin →
-    Plugins → Add New, search for Filecheck, click Install Now, then Activate."
-    Keep the release-ZIP download card as a secondary/manual option. */}
-
 <Steps>
-  <Step title="Download and install the plugin">
-    [Download the latest `filecheck.zip`](https://github.com/PrintApp/filecheck-wordpress/releases/latest/download/filecheck.zip). In **WP Admin → Plugins → Add New → Upload Plugin**, choose the ZIP, click **Install Now**, then **Activate**.
+  <Step title="Install the plugin">
+    In **WP Admin → Plugins → Add New**, search for **Filecheck**, click **Install Now**, then **Activate**. That's it — the plugin installs directly from the [WordPress.org directory](https://wordpress.org/plugins/filecheck/) and updates through WordPress like any other plugin.
   </Step>
   <Step title="Add your keys">
-    Go to **WooCommerce → Settings → Filecheck** and enter your **publishable key** and **secret key** from the [Dev Hub](https://admin.filecheck.io/devhub) (click **Copy PK** to copy the publishable key). Save. Once saved, your active workflows will automatically sync to your WordPress site.
+    Open **Filecheck** in the admin sidebar and enter your **publishable key** and **secret key** from the [Dev Hub](https://admin.filecheck.io/devhub) (click **Copy PK** to copy the publishable key). Click **Test Connection** to verify the keys, then **Save Settings**. Once saved, your active workflows will automatically sync to your WordPress site.
   </Step>
   <Step title="Enable Filecheck on a product">
-    Edit a product, open the **Filecheck** panel, tick **Require an upload**, and choose the workflow from the dropdown list (or leave it to use the default) and set the presentation mode (inline vs dialog) for that product.
+    Edit a product and open the **Filecheck** tab in the Product data panel. Choose the **Workflow** to validate uploads against (**None** disables Filecheck for that product, **Use Global Default** applies your store-wide setting), optionally pick a **Connector**, and set the **Presentation Mode** (inline vs dialog) for that product.
   </Step>
   <Step title="Test the gate">
     Open the product page. The **Add to cart** button stays disabled until an uploaded file passes. Upload a test file, watch it validate, and confirm the button enables. The validated `jobId` is attached to the order.
   </Step>
 </Steps>
+
+<Accordion title="Manual installation (ZIP)">
+  Prefer a manual install — for example on a staging site without directory access? Download the ZIP, then in **WP Admin → Plugins → Add New → Upload Plugin** choose the file, click **Install Now**, and **Activate**.
+
+  <Card title="Download the Filecheck plugin" icon="download" href="https://github.com/PrintApp/filecheck-wordpress/releases/latest/download/filecheck.zip">
+    Always grabs the latest `filecheck.zip` release.
+  </Card>
+</Accordion>
 
 <Note>
   **Optional: store-wide default workflow.** You can set a default **Workflow** that is applied to every product automatically. Leave this unset while you are testing. On a live store a default takes effect everywhere at once, so the upload Element would appear on all products immediately. Enable Filecheck per product first, and only set a default once you are confident how it behaves. See [Workflows](/concepts/workflows).
