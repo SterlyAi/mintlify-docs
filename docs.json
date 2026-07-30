@@ -112,8 +112,8 @@
               "integrations/woocommerce",
               "integrations/shopify",
               "integrations/opencart-prestashop",
-              "integrations/headless",
-              "tutorials/api-integration"
+              "tutorials/api-integration",
+              "integrations/headless"
             ]
           }
         ]

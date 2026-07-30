@@ -1,50 +1,108 @@
 ---
-title: "Headless & custom platforms"
-description: "Use the Element on any stack, then verify the job server-side with the REST API."
+title: "Headless API integration"
+description: "Submit files straight to POST /jobs — no widget — and collect results synchronously, by polling, or by webhook."
 ---
 
-There is no plugin requirement. On any platform, embed the [Element](/element/installation) on the client and verify the result on your server.
+Use the REST API alone when there is no browser in the flow: files arrive from your own upload pipeline, a batch process, email, or another system. Your server submits each file as a **job** with the ordered **steps** to run on it, then collects the result.
 
-## Client
+<Note>
+  If a customer uploads the file in a page you control, prefer [embedding the Element](/tutorials/api-integration) — you get the drop zone, progress, findings, and auto-fix UI for free, and only the verification happens server-side. This page is for flows with no widget at all.
+</Note>
 
-```html
-<script src="https://cdn.filecheck.io/element/v1/filecheck.js"></script>
-<div id="fc-slot"></div>
-<script>
-  const fc = Filecheck('pk_live_…');
-  const intake = fc.elements.create('intake', { workflowId: 'wf_…' });
-  intake.mount('#fc-slot');
-  intake.on('status', ({ canProceed, jobId }) => {
-    submitBtn.disabled = !canProceed;
-    hiddenJobIdInput.value = jobId ?? '';
-  });
-</script>
-```
+Every request in this flow is server-to-server, authenticated with your [secret key](/api-reference/authentication) as a bearer token. Never call these endpoints from the browser.
 
-## Server
+<Steps>
+  <Step title="Get the file to Filecheck">
+    A job source can reference the file three ways:
 
-1. When `canProceed` is `true`, submit the `jobId` with your form.
-2. Before fulfilling, verify the job with your secret key.
+    | Source | Use when |
+    | --- | --- |
+    | `url` | The file is already reachable over HTTP(S). Pass optional `headers` (e.g. `Authorization`) if the URL needs them. |
+    | `file` | Small files only — inline base64, capped at roughly 9 MB of encoded content. Add `name` as a filename hint. |
+    | `fileRef` | Large files, up to 500 MB. Create an upload first (below) and pass the returned reference. |
 
-```bash
-curl https://api.filecheck.io/jobs/{jobId} \
-  -H "Authorization: Bearer sk_live_…"
-```
+    For `fileRef`, mint presigned upload credentials with `POST /uploads`:
 
-3. Read `files[n].outputRef` to download the fixed file. See [Verify jobs](/server/verify-jobs).
+    ```bash
+    curl https://api.filecheck.io/uploads \
+      -H "Authorization: Bearer sk_live_…" \
+      -H "Content-Type: application/json" \
+      -d '{ "mimeType": "application/pdf", "sizeBytes": 48211234 }'
+    ```
 
-## Multiple elements on one page
+    The response contains a `fileRef` plus a presigned S3 form POST (`upload.url` and `upload.fields`). POST the file there as `multipart/form-data` within 300 seconds, then use the `fileRef` as your job source.
+  </Step>
+  <Step title="Submit the job">
+    `POST /jobs` is the canonical submission: each entry in `sources[]` is one file plus the ordered `steps[]` to run on it. A common print flow checks the file, auto-fixes what it can, and re-checks:
 
-Track `canProceed` per element and only enable submit when all pass:
+    ```bash
+    curl https://api.filecheck.io/jobs \
+      -H "Authorization: Bearer sk_live_…" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "sources": [{
+          "url": "https://example.com/artwork.pdf",
+          "steps": [
+            { "type": "preflight" },
+            { "type": "autofix" },
+            { "type": "repreflight" }
+          ]
+        }],
+        "policy": { "onFail": "reject" },
+        "webhook": { "url": "https://example.com/hooks/filecheck" },
+        "metaData": { "orderRef": "SO-1042" }
+      }'
+    ```
 
-```js
-const states = {};
-function addIntake(workflowId, slotId) {
-  const el = fc.elements.create('intake', { workflowId });
-  el.on('status', ({ canProceed, jobId }) => {
-    states[slotId] = { canProceed, jobId };
-    submitBtn.disabled = !Object.values(states).every(s => s.canProceed);
-  });
-  el.mount('#' + slotId);
-}
-```
+    Steps run sequentially per source, each feeding its output to the next; steps incompatible with the file's detected type are recorded as skipped. Available step types include `preflight`, `autofix`, `repreflight`, `validate`, `previews`, `optimize`, `convert`, `upscale`, `removebg`, and `deliver` — see the [API reference](/api-reference/introduction) for each step's parameters. A job accepts up to 50 sources; each source becomes its own task under the job. `metaData` (up to 4 KB) is echoed back on responses and webhook callbacks, so use it to carry your own correlation ids.
+
+    For the common cases you can skip composing steps and call a **sugar wrapper**, which builds them for you:
+
+    | Endpoint | Runs |
+    | --- | --- |
+    | `POST /jobs/preflight` | Preflight only. |
+    | `POST /jobs/fix` | Preflight + autofix, plus a re-check with `repreflight: true`. |
+    | `POST /jobs/optimize` | Optimize only. |
+    | `POST /jobs/validate` | PDF/A / PDF/UA conformance validation. Synchronous by default. |
+    | `POST /jobs/previews` | Render preview images. |
+  </Step>
+  <Step title="Collect the result">
+    Jobs are asynchronous by default — `POST /jobs` returns `201` immediately with the job `id`. Pick whichever result channel fits your flow:
+
+    **Wait synchronously.** Set `sync: true` on the submission to hold the connection up to ~27 seconds. You get `200` with the completed job, or `202` with `pending: true` if it is still running (fall back to polling or the webhook). Good for small files in a request/response cycle. (`POST /jobs/validate` is the inverse: synchronous by default, `async: true` to detach.)
+
+    **Poll.** Fetch the job until it reaches a terminal status (`ready`, `partial`, or `rejected`):
+
+    ```bash
+    curl "https://api.filecheck.io/jobs/{jobId}?expand=runs" \
+      -H "Authorization: Bearer sk_live_…"
+    ```
+
+    **Webhook.** Pass a per-job `webhook` on submission (as in the example above, with optional `headers` for authenticating the callback), or configure account-level [webhooks](/server/webhooks) in the admin to receive `job.created` / `job.completed` for every job. Either way, fetch the full job when the callback arrives rather than trusting the payload alone.
+  </Step>
+  <Step title="Read the outcome and download the output">
+    `?expand=runs` returns a flattened per-file summary — one entry per source — with the verdict and download links:
+
+    ```json
+    {
+      "runs": [{
+        "id": "task_…",
+        "name": "artwork.pdf",
+        "outcome": "pass",
+        "status": "done",
+        "hasOutput": true,
+        "downloadUrl": "https://…",
+        "proofs": [{ "url": "https://…" }]
+      }]
+    }
+    ```
+
+    `outcome` is `pass`, `warn`, or `fail` per file; how warnings and failures roll up into the job's final status is controlled by the `policy.onFail` you submitted (`reject`, `accept_with_warnings`, or `manual_review`). When a step produced a fixed or converted file, `hasOutput` is `true` and `downloadUrl` is a short-lived link to it. Omit `expand` to get the full job object with per-task step detail instead.
+  </Step>
+</Steps>
+
+## See also
+
+- [API overview](/api-reference/introduction) — base URL, conventions, and the generated reference for every endpoint.
+- [Webhooks](/server/webhooks) — account-level event delivery and handling guidance.
+- [Verify jobs](/server/verify-jobs) — the server-side checklist before fulfilling an order.
