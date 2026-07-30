@@ -1,0 +1,111 @@
+---
+title: "Node.js"
+description: "The filecheck-node server SDK — verify jobs before fulfilling, upload and process files, and handle webhooks."
+---
+
+`filecheck-node` wraps the [REST API](/api-reference/introduction) in a typed client for Node.js 18+, with zero runtime dependencies. Its centerpiece is `jobs.verify()` — the whole [server-side verification checklist](/server/verify-jobs) in one call.
+
+```bash
+npm install filecheck-node
+```
+
+<Warning>
+  The secret key (`sk_…`) is server-side only. Never import this package in browser code — use the [Element](/element/overview) with a publishable key there.
+</Warning>
+
+## Verify a job before fulfilling
+
+The Element gives the customer a `jobId`; never trust it blind. Verify it with your secret key before fulfilling:
+
+<CodeGroup>
+
+```ts Express
+import Filecheck from 'filecheck-node';
+const fc = new Filecheck(process.env.FILECHECK_SECRET_KEY);
+
+app.post('/checkout', async (req, res) => {
+  const { ok, state, reason } = await fc.jobs.verify(req.body.fc_job_id, {
+    workflowId: 'wf_…',
+  });
+  if (!ok) return res.status(422).json({ error: `files not accepted (${reason})` });
+  // fulfill — state is 'ready' or 'partial' (warnings accepted by policy)
+  res.json({ ok: true });
+});
+```
+
+```ts Next.js
+import Filecheck from 'filecheck-node';
+const fc = new Filecheck(process.env.FILECHECK_SECRET_KEY!);
+
+export async function POST(request: Request) {
+  const { jobId } = await request.json();
+  const { ok, reason } = await fc.jobs.verify(jobId, { workflowId: 'wf_…' });
+  if (!ok) return Response.json({ error: reason }, { status: 422 });
+  return Response.json({ ok: true });
+}
+```
+
+</CodeGroup>
+
+`verify()` confirms the job is **terminal**, **proceedable** (the Element's `canProceed` equivalent, with the Workflow's on-fail policy applied), and — when you pass `workflowId` — that it ran the expected Workflow. It returns `{ ok, state, reason, job }`, so the full job (including download URLs on `deliverables`) is already in hand when it passes.
+
+## Upload and process files
+
+For [headless flows](/integrations/headless) with no browser involved:
+
+```ts
+// Two-leg upload (presign + storage POST) in one call → fileRef
+const { fileRef } = await fc.uploads.create(buffer, {
+  mimeType: 'application/pdf',
+  fileName: 'artwork.pdf',
+});
+
+// Preflight + auto-fix; wait: true blocks until the job is terminal
+const { job } = await fc.jobs.fix({
+  sources: [{ fileRef, profileId: 'default' }],
+  wait: true,
+});
+
+// Or compose the canonical step pipeline yourself
+await fc.jobs.create({
+  sources: [{ url: 'https://example.com/artwork.pdf', steps: [{ type: 'preflight' }] }],
+  webhook: { url: 'https://example.com/hooks/filecheck' },
+});
+```
+
+Every submit method takes `{ wait?, waitTimeoutMs? }` instead of the API's raw `sync`/`async` flags, with defaults matching each endpoint (`validate` and `optimize` wait by default; the rest are async). If the server's ~27-second window elapses, the SDK keeps polling `GET /jobs/{id}` for you and resolves `{ job, pending }`.
+
+## Surface
+
+| Method | Endpoint |
+| --- | --- |
+| `fc.jobs.create` / `preflight` / `previews` / `fix` / `validate` / `optimize` | `POST /jobs` and the sugar wrappers |
+| `fc.jobs.retrieve(id)` / `retrieveRuns(id)` | `GET /jobs/{id}` (± `?expand=runs`) |
+| `fc.jobs.list()` / `iterate()` / `del(id)` / `waitUntilTerminal(id)` | `GET /jobs`, `DELETE /jobs/{id}`, polling helper |
+| `fc.jobs.verify(id, opts)` | The fulfillment gate |
+| `fc.uploads.create(file, opts)` | `POST /uploads` + the storage leg |
+| `fc.orders.create(orderId, params)` | `POST /orders/{id}` |
+| `fc.workflows` / `connectors` / `rules` / `profiles` / `optimizePresets` `.list()` / `.retrieve(id)` | Read-only library |
+| `fc.webhooks.constructEvent(rawBody, sig, secret, opts)` | Webhook parsing |
+
+Client options: `new Filecheck('sk_…', { baseUrl?, timeoutMs?, maxRetries?, fetch? })`. Passing a publishable `pk_…` key throws immediately with an explanation, and keys are never echoed in full.
+
+## Webhooks
+
+```ts
+app.post('/hooks/filecheck', express.raw({ type: 'application/json' }), (req, res) => {
+  const event = fc.webhooks.constructEvent(req.body, null, null, { verify: false });
+  if (event.type === 'job.completed') {
+    // event.payload — typed: id, status, outcome, tasks[], …
+  }
+  res.sendStatus(200);
+});
+```
+
+Always pass the **raw** request body (`express.raw`, `await request.text()`). Webhook [signature verification](/server/webhooks) is not yet live; `{ verify: false }` is the explicit, temporary opt-in for unsigned payloads, and the helper is designed so verification becomes the default without a breaking change once the signing scheme ships.
+
+## Errors and retries
+
+Typed errors — `AuthenticationError` (401/403), `InvalidRequestError` (400), `NotFoundError` (404), `RateLimitError` (429), `APIError` (5xx), `ConnectionError` — carry `status` and the parsed body. Branch on the error class, not the message text.
+
+Idempotent GETs are retried automatically (exponential backoff with jitter, `Retry-After` honored). **POSTs are never auto-retried**: the API has no idempotency keys, and a duplicated `POST /jobs` creates and bills a second job. If you need retry-safe creates, tag sources with `metaData` and reconcile via `jobs.list()`.

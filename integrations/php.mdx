@@ -1,0 +1,104 @@
+---
+title: "PHP"
+description: "The filecheck/filecheck-php server SDK — verify jobs before fulfilling, upload and process files, and handle webhooks."
+---
+
+`filecheck/filecheck-php` mirrors the [Node.js SDK](/integrations/node) method-for-method for PHP 8.1+. HTTP goes through any PSR-18 client (auto-discovered, or injected — Guzzle, Symfony HttpClient), with a bundled cURL fallback so it works with zero extra dependencies. Responses are typed, readonly value objects.
+
+```bash
+composer require filecheck/filecheck-php
+```
+
+<Warning>
+  The secret key (`sk_…`) is server-side only. Load it from configuration or the environment — never commit it or expose it to the browser.
+</Warning>
+
+## Verify a job before fulfilling
+
+<CodeGroup>
+
+```php Plain PHP
+$fc = new \Filecheck\FilecheckClient(getenv('FILECHECK_SECRET_KEY'));
+
+$result = $fc->jobs->verify($_POST['fc_job_id'], ['workflow_id' => 'wf_…']);
+if (!$result->ok) {
+    http_response_code(422);
+    exit("Files not accepted ({$result->reason})");
+}
+// fulfill — $result->state is 'ready' or 'partial' (warnings accepted by policy)
+```
+
+```php Laravel
+// AppServiceProvider
+$this->app->singleton(FilecheckClient::class,
+    fn () => new FilecheckClient(config('services.filecheck.secret')));
+
+// CheckoutController
+public function store(Request $request, FilecheckClient $fc)
+{
+    $result = $fc->jobs->verify($request->input('fc_job_id'), ['workflow_id' => 'wf_…']);
+    abort_unless($result->ok, 422, "Files not accepted ({$result->reason})");
+    // …
+}
+```
+
+</CodeGroup>
+
+`verify()` confirms the job is **terminal**, **proceedable** (the Element's `canProceed` equivalent, with the Workflow's on-fail policy applied), and — with `workflow_id` — that it ran the expected Workflow. The returned `VerifyResult` carries `ok`, `state`, `reason`, and the full `job`.
+
+## Upload and process files
+
+```php
+// Two-leg upload (presign + storage POST) in one call → fileRef
+$upload = $fc->uploads->create('/tmp/artwork.pdf', ['mime_type' => 'application/pdf']);
+
+// Preflight + auto-fix; 'wait' => true blocks until the job is terminal
+$res = $fc->jobs->fix([
+    'sources' => [['fileRef' => $upload->fileRef, 'profileId' => 'default']],
+    'wait' => true,
+]);
+echo $res->job->outcome;
+```
+
+Every submit method takes `'wait'` / `'wait_timeout'` (seconds) instead of the API's raw `sync`/`async` flags, with defaults matching each endpoint (`validate` and `optimize` wait by default; the rest are async). If the server's ~27-second window elapses, the SDK keeps polling for you.
+
+<Note>
+  A blocking wait ties up the PHP worker — mind FPM request time limits. For long-running jobs, prefer the per-job `webhook` parameter and process the callback instead.
+</Note>
+
+## Surface
+
+| Method | Endpoint |
+| --- | --- |
+| `$fc->jobs->create` / `preflight` / `previews` / `fix` / `validate` / `optimize` | `POST /jobs` and the sugar wrappers |
+| `$fc->jobs->retrieve($id)` / `retrieveRuns($id)` | `GET /jobs/{id}` (± `?expand=runs`) |
+| `$fc->jobs->list()` / `iterate()` / `delete($id)` / `waitUntilTerminal($id)` | `GET /jobs`, `DELETE /jobs/{id}`, polling helper |
+| `$fc->jobs->verify($id, $opts)` | The fulfillment gate |
+| `$fc->uploads->create($pathOrBytesOrStream, $opts)` | `POST /uploads` + the storage leg |
+| `$fc->orders->create($orderId, $params)` | `POST /orders/{id}` |
+| `$fc->workflows` / `connectors` / `rules` / `profiles` / `optimizePresets` `->all()` / `->get($id)` | Read-only library |
+| `Webhooks::constructEvent($rawBody, $sig, $secret, $opts)` | Webhook parsing |
+
+Client options: `new FilecheckClient('sk_…', ['base_url', 'timeout', 'max_retries', 'http_client'])`. Passing a publishable `pk_…` key throws immediately, and keys are never echoed in full.
+
+## Webhooks
+
+```php
+$event = \Filecheck\Webhook\Webhooks::constructEvent(
+    file_get_contents('php://input'),   // always the raw body
+    $_SERVER['HTTP_X_FILECHECK_SIGNATURE'] ?? null,
+    null,
+    ['verify' => false],
+);
+if ($event->type === \Filecheck\Data\WebhookEvent::TYPE_JOB_COMPLETED) {
+    // $event->payload — id, status, outcome, tasks, …
+}
+```
+
+In Laravel, exempt the route from CSRF and use `$request->getContent()` for the raw body. Webhook [signature verification](/server/webhooks) is not yet live; `['verify' => false]` is the explicit, temporary opt-in for unsigned payloads, and the helper is designed so verification becomes the default without a breaking change once the signing scheme ships.
+
+## Errors and retries
+
+Typed exceptions in `Filecheck\Exception` — `AuthenticationException` (401/403), `InvalidRequestException` (400), `NotFoundException` (404), `RateLimitException` (429), `ApiException` (5xx), `ConnectionException` — carry `status` and the parsed body. Catch by class, not message text.
+
+Idempotent GETs are retried automatically (exponential backoff with jitter, `Retry-After` honored). **POSTs are never auto-retried**: the API has no idempotency keys, and a duplicated `POST /jobs` creates and bills a second job.

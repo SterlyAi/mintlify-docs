@@ -5,6 +5,10 @@ description: "Base URL, authentication, and conventions for the Filecheck REST A
 
 The Filecheck REST API lets you submit files as jobs, fetch results, and read your library resources (workflows, rules, connectors, profiles, optimize presets). Use it server-side with your [secret key](/api-reference/authentication).
 
+<Note>
+  Prefer not to hand-roll HTTP calls? The [official libraries](/integrations/libraries) wrap this API for Node.js (`filecheck-node`) and PHP (`filecheck/filecheck-php`) — typed clients with retries, uploads, webhooks, and a one-call `verify()` — plus browser packages for the Element (`filecheck-js`, `filecheck-react`, `filecheck-vue`).
+</Note>
+
 ## Base URL
 
 ```

@@ -1,0 +1,48 @@
+---
+title: "Official libraries"
+description: "Typed packages for JavaScript, React, Vue, Node.js, and PHP — the fastest way to integrate Filecheck on a custom stack."
+---
+
+Filecheck ships five official libraries. The browser packages are thin, typed wrappers around the [Element](/element/overview) — the Element itself always loads from the Filecheck CDN, so UI updates reach you without a package upgrade. The server packages wrap the [REST API](/api-reference/introduction) with typed clients, retries, and a one-call job verification helper.
+
+| Package | Registry | Use it for |
+| --- | --- | --- |
+| [`filecheck-js`](/integrations/filecheck-js) | npm | Typed loader for the Element + all shared TypeScript types |
+| [`filecheck-react`](/integrations/react) | npm | React component and hooks wrapping the Element |
+| [`filecheck-vue`](/integrations/vue) | npm | Vue 3 component and composable wrapping the Element |
+| [`filecheck-node`](/integrations/node) | npm | Node.js server SDK — jobs, uploads, webhooks, `jobs.verify()` |
+| [`filecheck/filecheck-php`](/integrations/php) | Packagist | PHP server SDK, mirroring the Node.js SDK |
+
+## Install
+
+<CodeGroup>
+
+```bash Browser
+npm install filecheck-js
+# with a framework wrapper:
+npm install filecheck-react filecheck-js
+npm install filecheck-vue filecheck-js
+```
+
+```bash Node.js
+npm install filecheck-node
+```
+
+```bash PHP
+composer require filecheck/filecheck-php
+```
+
+</CodeGroup>
+
+## Which do I need?
+
+A complete integration has two halves, and you typically pick one package from each:
+
+1. **Client** — embed the Element so customers upload, see findings, and get auto-fixes. Use `filecheck-js` on vanilla stacks, or `filecheck-react` / `filecheck-vue` inside those frameworks. Gate your submit button on `canProceed` and carry the `jobId` to your server.
+2. **Server** — before fulfilling, verify the submitted `jobId` with your secret key. Use `filecheck-node` or `filecheck/filecheck-php`; both encode the [verification checklist](/server/verify-jobs) in a single `verify()` call.
+
+<Note>
+  Not on npm or Composer? The plain `<script>` embed works everywhere — see [Element on a custom stack](/tutorials/api-integration). No browser in the flow at all? Use the [headless API integration](/integrations/headless).
+</Note>
+
+All packages are MIT licensed and developed in the open at [github.com/PrintApp/filecheck-integrations](https://github.com/PrintApp/filecheck-integrations) (PHP: [github.com/PrintApp/filecheck-php](https://github.com/PrintApp/filecheck-php)).

@@ -1,0 +1,70 @@
+---
+title: "React"
+description: "Embed the Element in React with <FilecheckIntake />, gate submit on canProceed, and capture the jobId."
+---
+
+`filecheck-react` wraps the Element in an idiomatic React component: props map to Element options, events become callback props, and the element lifecycle (create, subscribe, mount, update, teardown) is handled for you. Requires React 18 or newer; every entry point carries `'use client'`, so it works in the Next.js App Router without configuration.
+
+```bash
+npm install filecheck-react filecheck-js
+```
+
+## Quickstart
+
+```tsx
+import { loadFilecheck } from 'filecheck-js';
+import { FilecheckProvider, FilecheckIntake } from 'filecheck-react';
+import { useState } from 'react';
+
+const filecheckPromise = loadFilecheck('pk_…');
+
+function Checkout() {
+  const [canProceed, setCanProceed] = useState(false);
+  const [jobId, setJobId] = useState('');
+
+  return (
+    <FilecheckProvider filecheck={filecheckPromise}>
+      <FilecheckIntake
+        workflowId="wf_…"
+        onStatus={(s) => {
+          setCanProceed(s.canProceed);   // authoritative — never re-derive
+          setJobId(s.jobId ?? '');
+        }}
+      />
+      <form method="post" action="/checkout">
+        <input type="hidden" name="fc_job_id" value={jobId} readOnly />
+        <button type="submit" disabled={!canProceed}>Continue</button>
+      </form>
+    </FilecheckProvider>
+  );
+}
+```
+
+Then [verify the `jobId` server-side](/server/verify-jobs) before fulfilling — client-side gating alone can be bypassed.
+
+## `<FilecheckIntake />` props
+
+| Prop | Kind | Behavior on change |
+| --- | --- | --- |
+| `workflowId`, `ui`, `locale` | Mutable | Applied via `element.update()` — no remount. Inline object literals are compared by value. |
+| `connector` | Mutable | Applied via `element.setConnector()` — no remount. |
+| `jobId`, `presentation`, `connectorId`, `preview`, `workflow` | Identity | Changing one recreates the element (instances are single-use). |
+| `onReady`, `onStatus`, `onFacts`, `onUi`, `onError`, `onProof`, `onFileSelect`, `onDownload`, `onDestroy`, `onConnectorApply` | Callbacks | Safe to pass inline — changing a callback never re-subscribes or recreates. |
+| `id`, `className`, `style` | Slot | Applied to the wrapper `<div>`. Width only; the widget self-sizes. |
+
+The component is safe under React 18 StrictMode — the dev double-mount produces exactly one iframe.
+
+## Imperative access
+
+Expose the element instance through a ref when you need `focus()`, `blur()`, or `respondToProof()`:
+
+```tsx
+const ref = useRef<FilecheckIntakeRef>(null);
+<FilecheckIntake ref={ref} workflowId="wf_…" />
+// ref.current?.focus();  ref.current?.respondToProof(true);
+// ref.current?.element — the raw element instance
+```
+
+`useFilecheck()` returns the resolved factory (or `null` while the CDN script loads) for anything the component does not cover — for example creating a `report` element yourself.
+
+All `filecheck-js` types are re-exported, so one import site covers both packages.

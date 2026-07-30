@@ -1,0 +1,72 @@
+---
+title: "Vue"
+description: "Embed the Element in Vue 3 with <FilecheckIntake>, v-model the jobId, and gate submit on canProceed."
+---
+
+`filecheck-vue` wraps the Element for Vue 3 (Composition API): a plugin loads the CDN script, the `<FilecheckIntake>` component manages the element lifecycle, events are re-emitted Vue-style, and `v-model:job-id` binds the job id straight into your form state. SSR-safe for Nuxt — nothing touches `window` until `onMounted`. Requires Vue ≥ 3.3.
+
+```bash
+npm install filecheck-vue filecheck-js
+```
+
+## Quickstart
+
+Install the plugin once:
+
+```ts
+// main.ts
+import { FilecheckPlugin } from 'filecheck-vue';
+
+app.use(FilecheckPlugin, { publishableKey: 'pk_…' });
+```
+
+Then drop the component into your page:
+
+```vue
+<script setup lang="ts">
+import { FilecheckIntake } from 'filecheck-vue';
+import { ref } from 'vue';
+
+const jobId = ref('');
+const canProceed = ref(false);
+</script>
+
+<template>
+  <FilecheckIntake
+    workflow-id="wf_…"
+    v-model:job-id="jobId"
+    @status="(s) => (canProceed = s.canProceed)"
+  />
+  <form method="post" action="/checkout">
+    <input type="hidden" name="fc_job_id" :value="jobId" />
+    <button type="submit" :disabled="!canProceed">Continue</button>
+  </form>
+</template>
+```
+
+Then [verify the `jobId` server-side](/server/verify-jobs) before fulfilling — client-side gating alone can be bypassed.
+
+## Props and events
+
+| Prop | Kind | Behavior on change |
+| --- | --- | --- |
+| `workflowId`, `ui`, `locale` | Mutable | Applied via `element.update()` — no remount. |
+| `connector` | Mutable | Applied via `element.setConnector()` — no remount. |
+| `jobId`, `presentation`, `connectorId`, `preview`, `workflow` | Identity | Changing one recreates the element. A `v-model:job-id` write-back from a `status` event never triggers a recreate — only an externally-set `jobId` does. |
+
+Events: `@ready`, `@status`, `@facts`, `@ui`, `@error`, `@proof`, `@file-select`, `@download`, `@destroy`, `@connector-apply`, and `@update:jobId` (the `v-model:job-id` channel). Payloads match the [Element events](/element/events) exactly.
+
+## Imperative access
+
+A template ref exposes `element` (the raw element instance), `focus()`, `blur()`, and `respondToProof(approved)`:
+
+```vue
+<FilecheckIntake ref="intake" workflow-id="wf_…" />
+<!-- intakeRef.value?.focus() -->
+```
+
+`useFilecheck()` returns a `ShallowRef<FilecheckInstance | null>` for anything the component does not cover — for example creating a `report` element yourself. All `filecheck-js` types are re-exported.
+
+<Note>
+  Already have a `loadFilecheck` promise (for example from a Nuxt plugin)? Pass it directly: `app.use(FilecheckPlugin, { filecheck: promise })`.
+</Note>

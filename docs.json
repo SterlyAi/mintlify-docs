@@ -113,7 +113,18 @@
               "integrations/shopify",
               "integrations/opencart-prestashop",
               "tutorials/api-integration",
-              "integrations/headless"
+              "integrations/headless",
+              {
+                "group": "Official libraries",
+                "pages": [
+                  "integrations/libraries",
+                  "integrations/filecheck-js",
+                  "integrations/react",
+                  "integrations/vue",
+                  "integrations/node",
+                  "integrations/php"
+                ]
+              }
             ]
           }
         ]
@@ -126,7 +137,8 @@
             "group": "Overview",
             "pages": [
               "api-reference/introduction",
-              "api-reference/authentication"
+              "api-reference/authentication",
+              "integrations/libraries"
             ]
           },
           {

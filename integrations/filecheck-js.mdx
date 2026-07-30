@@ -1,0 +1,56 @@
+---
+title: "filecheck-js"
+description: "Typed, promise-based loader for the Element — plus every shared TypeScript type."
+---
+
+`filecheck-js` replaces the manual `<script>` tag and polling loop with one typed call. It injects the CDN script once (concurrent calls share a single tag), resolves when the Element is ready, and exports the full Element type surface so `elements.create('intake', …)` and every event payload are typed end to end.
+
+```bash
+npm install filecheck-js
+```
+
+## Quickstart
+
+```ts
+import { loadFilecheck } from 'filecheck-js';
+
+const fc = await loadFilecheck('pk_…');
+if (fc) {
+  const intake = fc.elements.create('intake', { workflowId: 'wf_…' });
+
+  intake.on('status', ({ canProceed, jobId }) => {
+    submitButton.disabled = !canProceed;      // authoritative — never re-derive
+    jobIdInput.value = jobId ?? '';           // verify server-side before fulfilling
+  });
+
+  intake.mount('#fc-slot');
+}
+```
+
+Gate your submit button on `canProceed` and send the `jobId` to your server with the form — then [verify it server-side](/server/verify-jobs) before fulfilling.
+
+## `loadFilecheck(publishableKey, options?)`
+
+Returns `Promise<FilecheckInstance | null>`.
+
+| Option | Type | Description |
+| --- | --- | --- |
+| `agentId` | `string` | Optional sub-tenant scope, passed to the factory. |
+| `scriptUrl` | `string` | Override the CDN script URL (staging or self-hosted). |
+| `loadTimeoutMs` | `number` | Reject if the script has not loaded (default 30 000; `0` disables). |
+
+Behavior worth knowing:
+
+- **Idempotent.** Repeated and concurrent calls inject exactly one `<script>` tag and share one promise. A tag you added yourself is reused.
+- **SSR-safe.** In a non-browser environment it resolves `null` instead of touching `window`, so you can call it unconditionally in isomorphic code.
+- **Recoverable.** A load failure or timeout rejects with a descriptive error; calling `loadFilecheck` again retries the load.
+
+## TypeScript
+
+Every shared type is exported from the package root: `FilecheckInstance`, `IntakeElementOptions`, `ReportElementOptions`, `IntakeUi`, `IntakeStatusPayload`, `IntakeFacts`, `ElementEventMap`, `ProofPayload`, `ConnectorConfig`, and more. `window.Filecheck` is also typed globally, including the static [`Filecheck.mount`](/element/presentation) helper the CDN bundle provides.
+
+From here the API is the standard Element surface — see [Create and mount](/element/create-and-mount) for options and methods, and [Events](/element/events) for every payload.
+
+<Note>
+  Using React or Vue? [`filecheck-react`](/integrations/react) and [`filecheck-vue`](/integrations/vue) build on this package and manage the element lifecycle for you.
+</Note>
