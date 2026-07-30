@@ -137,7 +137,12 @@
             "group": "Overview",
             "pages": [
               "api-reference/introduction",
-              "api-reference/authentication",
+              "api-reference/authentication"
+            ]
+          },
+          {
+            "group": "Libraries",
+            "pages": [
               "integrations/libraries"
             ]
           },
