@@ -44,7 +44,7 @@
 
 	var el = document.createElement('div');
 	el.id = 'fc-consent';
-	el.style.cssText = 'position:fixed;left:1rem;bottom:1rem;z-index:9999;width:300px;max-width:calc(100vw - 2rem);' +
+	el.style.cssText = 'position:fixed;right:1rem;bottom:1rem;z-index:9999;width:300px;max-width:calc(100vw - 2rem);' +
 		'background:#17191d;border:1px solid #383c45;border-radius:10px;padding:14px 16px;' +
 		'opacity:0;transform:translateY(12px);transition:opacity .3s ease,transform .3s ease;' +
 		'font-size:12px;line-height:1.55;color:#c8ccd4;font-family:inherit;';
