@@ -11,7 +11,8 @@
   "redirects": [
     { "source": "/authentication", "destination": "/api-reference/authentication" },
     { "source": "/docs/authentication", "destination": "/api-reference/authentication" },
-    { "source": "/workflows", "destination": "/concepts/workflows" }
+    { "source": "/workflows", "destination": "/concepts/workflows" },
+    { "source": "/tutorials/overview", "destination": "/quickstart" }
   ],
   "navigation": {
     "tabs": [
@@ -26,7 +27,7 @@
             ]
           },
           {
-            "group": "Integrations",
+            "group": "Install Filecheck",
             "pages": [
               "tutorials/wordpress-installation",
               "tutorials/shopify-installation",
@@ -42,44 +43,6 @@
               "concepts/jobs",
               "concepts/remediation",
               "concepts/soft-proofing"
-            ]
-          },
-          {
-            "group": "The Element",
-            "pages": [
-              "element/overview",
-              "element/installation",
-              "element/create-and-mount",
-              "element/events",
-              "element/presentation",
-              "element/connectors"
-            ]
-          },
-          {
-            "group": "Server-side",
-            "pages": [
-              "server/verify-jobs",
-              "server/webhooks"
-            ]
-          },
-          {
-            "group": "Reference",
-            "pages": [
-              "reference/status-payload",
-              "reference/facts",
-              "reference/errors",
-              "reference/changelog"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "Tutorials",
-        "groups": [
-          {
-            "group": "Overview",
-            "pages": [
-              "tutorials/overview"
             ]
           },
           {
@@ -107,24 +70,73 @@
             ]
           },
           {
-            "group": "Developer integrations",
+            "group": "Specifications",
+            "pages": [
+              "specifications/languages",
+              "specifications/file-types"
+            ]
+          },
+          {
+            "group": "Resources",
+            "pages": [
+              "reference/changelog"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Developers",
+        "groups": [
+          {
+            "group": "The Element",
+            "pages": [
+              "element/overview",
+              "element/installation",
+              "element/create-and-mount",
+              "element/events",
+              "element/presentation",
+              "element/connectors"
+            ]
+          },
+          {
+            "group": "Store plugins",
             "pages": [
               "integrations/woocommerce",
               "integrations/shopify",
-              "integrations/opencart-prestashop",
+              "integrations/opencart-prestashop"
+            ]
+          },
+          {
+            "group": "Custom integrations",
+            "pages": [
               "tutorials/api-integration",
-              "integrations/headless",
-              {
-                "group": "Official libraries",
-                "pages": [
-                  "integrations/libraries",
-                  "integrations/filecheck-js",
-                  "integrations/react",
-                  "integrations/vue",
-                  "integrations/node",
-                  "integrations/php"
-                ]
-              }
+              "integrations/headless"
+            ]
+          },
+          {
+            "group": "Official libraries",
+            "pages": [
+              "integrations/libraries",
+              "integrations/filecheck-js",
+              "integrations/react",
+              "integrations/vue",
+              "integrations/node",
+              "integrations/php"
+            ]
+          },
+          {
+            "group": "Server-side",
+            "pages": [
+              "server/verify-jobs",
+              "server/webhooks"
+            ]
+          },
+          {
+            "group": "Reference",
+            "pages": [
+              "reference/status-payload",
+              "reference/facts",
+              "reference/errors"
             ]
           }
         ]

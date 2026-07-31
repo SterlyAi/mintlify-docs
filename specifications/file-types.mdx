@@ -1,0 +1,71 @@
+---
+title: "Supported file types"
+description: "The file categories Filecheck can accept, check, fix, and convert."
+---
+
+Which file types your store actually accepts is up to you — you choose them per [Upload Rule](/configuration/upload-rules) in the admin, along with size limits and what happens when a check fails. The categories below are what Filecheck supports, and what it can do with each.
+
+<Tip>
+  Files are identified by their actual content, not just their file extension. A `.pdf` that isn't really a PDF is caught at upload.
+</Tip>
+
+## PDF
+
+Full preflight checks and automatic fixing.
+
+| Extension | MIME type | What Filecheck can do |
+| --- | --- | --- |
+| `.pdf` | `application/pdf` | Preflight checks, auto-fix, conformance validation, soft-proofing, optimization |
+
+PDFs can also be validated against official ISO conformance standards: **PDF/A**-1a, -1b, -2a, -2b, -2u, -3a, -3b, -3u, -4, -4e, -4f (archiving) and **PDF/UA**-1, -2 (accessibility).
+
+## Raster images
+
+Full preflight checks and automatic fixing, using raster-specific checks (resolution, dimensions, color).
+
+| Extension | MIME type | What Filecheck can do |
+| --- | --- | --- |
+| `.jpg`, `.jpeg` | `image/jpeg` | Preflight checks, auto-fix, soft-proofing, optimization |
+| `.png` | `image/png` | Preflight checks, auto-fix, soft-proofing, optimization |
+| `.tif`, `.tiff` | `image/tiff` | Preflight checks, auto-fix, soft-proofing, optimization |
+| `.webp` | `image/webp` | Preflight checks, auto-fix, soft-proofing, optimization |
+| `.heic` | `image/heic` | Preflight checks, auto-fix, soft-proofing, optimization |
+| `.heif` | `image/heif` | Preflight checks, auto-fix, soft-proofing, optimization |
+
+## Vector
+
+Accepted and converted to PDF, after which the full PDF toolset applies.
+
+| Extension | MIME type | What Filecheck can do |
+| --- | --- | --- |
+| `.svg` | `image/svg+xml` | Convert to PDF, then process as PDF |
+| `.eps`, `.ps` | `application/postscript` | Convert to PDF, then process as PDF |
+
+## Office documents
+
+Accepted and converted to PDF, after which the full PDF toolset applies.
+
+| Extension | MIME type | What Filecheck can do |
+| --- | --- | --- |
+| `.doc` | `application/msword` | Convert to PDF, then process as PDF |
+| `.docx` | `application/vnd.openxmlformats-officedocument.wordprocessingml.document` | Convert to PDF, then process as PDF |
+| `.xls` | `application/vnd.ms-excel` | Convert to PDF, then process as PDF |
+| `.xlsx` | `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` | Convert to PDF, then process as PDF |
+
+## Archives
+
+Accepted and passed through to your order or storage — no checks run on the contents.
+
+| Extension | MIME type | What Filecheck can do |
+| --- | --- | --- |
+| `.zip` | `application/zip` | Accept and hand off |
+| `.tar` | `application/x-tar` | Accept and hand off |
+| `.gz` | `application/gzip` | Accept and hand off |
+
+## Everything else
+
+By default, a Rule rejects file types it doesn't list. You can instead choose to accept unknown types and hand them off unchecked — useful for reference material or supporting assets.
+
+## Size limits
+
+There is no fixed platform limit — you set a maximum size per accepted file type (and an optional total per upload) on each Upload Rule, and uploads are checked against it before processing. Files up to **500 MB** are supported.
