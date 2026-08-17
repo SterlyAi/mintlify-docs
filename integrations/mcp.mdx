@@ -1,0 +1,75 @@
+---
+title: "MCP server"
+sidebarTitle: "MCP"
+description: "Connect Claude, Cursor, or any MCP client to Filecheck — check, fix, validate, and optimize print files from an AI agent."
+---
+
+`filecheck-mcp` is a [Model Context Protocol](https://modelcontextprotocol.io) server for the Filecheck API. Once connected, an AI agent can preflight a customer file, apply automatic fixes, validate PDF/A conformance, render page previews, and browse your profiles and rules — with your account's tenancy and billing applied throughout.
+
+There are two ways to run it. Both use the same tools and the same secret key.
+
+<Warning>
+  The secret key (`sk_…`) grants full API access to your account. Keep it in your MCP client's local config or server-side environment — never in a repository or a browser.
+</Warning>
+
+## Local server (recommended)
+
+The local server runs on your machine via `npx`, so it can upload files straight from disk — file bytes go to Filecheck over a presigned upload, never through the model's context.
+
+```bash
+claude mcp add filecheck -e FILECHECK_API_KEY=sk_... -- npx -y filecheck-mcp
+```
+
+For Claude Desktop or Cursor, add it to the MCP configuration file:
+
+```json
+{
+  "mcpServers": {
+    "filecheck": {
+      "command": "npx",
+      "args": ["-y", "filecheck-mcp"],
+      "env": { "FILECHECK_API_KEY": "sk_..." }
+    }
+  }
+}
+```
+
+## Remote server
+
+If installing packages is not an option, connect to the hosted endpoint instead. It exposes the same tools minus local-file access — sources are URLs or previously uploaded `fileRef`s.
+
+```bash
+claude mcp add --transport http filecheck https://api.filecheck.io/mcp \
+  --header "Authorization: Bearer sk_..."
+```
+
+## Tools
+
+| Tool | What it does |
+| --- | --- |
+| `check_file` | Preflight a file against a profile; returns verdict, findings, and a recommended autofix |
+| `fix_file` | Preflight, apply safe automatic fixes, re-check; returns the fixed file |
+| `validate_pdf` | PDF/A and PDF/UA conformance via veraPDF |
+| `optimize_file` | Downsample, recompress, and slim a PDF or image |
+| `render_previews` | Render page preview images, so the agent can look at a file |
+| `get_job` | Poll a job and re-mint fresh download URLs |
+| `list_jobs` | Recent jobs as lean envelopes |
+| `delete_job` | Soft-delete a job and its artifacts |
+| `list_catalog` | Browse profiles, rules, workflows, connectors, and optimize presets |
+| `get_report` | Drill into the full preflight report, section by section |
+| `save_artifact` | Save a deliverable to a local path (local server only) |
+
+## Reading results
+
+Every job carries two independent fields, and agents are instructed to read both:
+
+- **`status`** — did the check *run*: `pending`, `running`, `done`, `skipped`, or `error`.
+- **`outcome`** — the *verdict*: `pass`, `warn`, `fail`, `fixed`, `unchanged`, `na`, or `mixed`.
+
+`status: done` with `outcome: fail` means the check completed and the file is **not** print-ready. The same [two-axis model](/server/verify-jobs) applies across the whole API.
+
+<Note>
+  Download URLs are presigned and expire after about 60 minutes. `get_job` returns freshly signed URLs on every call, so agents re-fetch instead of storing links. Long-running jobs return `pending: true` with polling guidance rather than blocking.
+</Note>
+
+The package is MIT licensed and developed at [github.com/PrintApp/filecheck-integrations](https://github.com/PrintApp/filecheck-integrations).

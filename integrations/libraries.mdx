@@ -1,10 +1,10 @@
 ---
 title: "Official libraries"
 sidebarTitle: "Overview"
-description: "Typed packages for JavaScript, React, Vue, Node.js, and PHP — the fastest way to integrate Filecheck on a custom stack."
+description: "Typed packages for JavaScript, React, Vue, Node.js, and PHP, plus an MCP server for AI agents — the fastest way to integrate Filecheck on a custom stack."
 ---
 
-Filecheck ships five official libraries. The browser packages are thin, typed wrappers around the [Element](/element/overview) — the Element itself always loads from the Filecheck CDN, so UI updates reach you without a package upgrade. The server packages wrap the [REST API](/api-reference/introduction) with typed clients, retries, and a one-call job verification helper.
+Filecheck ships six official libraries. The browser packages are thin, typed wrappers around the [Element](/element/overview) — the Element itself always loads from the Filecheck CDN, so UI updates reach you without a package upgrade. The server packages wrap the [REST API](/api-reference/introduction) with typed clients, retries, and a one-call job verification helper.
 
 | Package | Registry | Use it for |
 | --- | --- | --- |
@@ -13,6 +13,7 @@ Filecheck ships five official libraries. The browser packages are thin, typed wr
 | [`filecheck-vue`](/integrations/vue) | npm | Vue 3 component and composable wrapping the Element |
 | [`filecheck-node`](/integrations/node) | npm | Node.js server SDK — jobs, uploads, webhooks, `jobs.verify()` |
 | [`filecheck/filecheck-php`](/integrations/php) | Packagist | PHP server SDK, mirroring the Node.js SDK |
+| [`filecheck-mcp`](/integrations/mcp) | npm | MCP server — check and fix print files from Claude, Cursor, and other AI agents |
 
 ## Install
 
@@ -33,6 +34,10 @@ npm install filecheck-node
 composer require filecheck/filecheck-php
 ```
 
+```bash AI agents
+claude mcp add filecheck -e FILECHECK_API_KEY=sk_... -- npx -y filecheck-mcp
+```
+
 </CodeGroup>
 
 ## Which do I need?
@@ -41,6 +46,8 @@ A complete integration has two halves, and you typically pick one package from e
 
 1. **Client** — embed the Element so customers upload, see findings, and get auto-fixes. Use `filecheck-js` on vanilla stacks, or `filecheck-react` / `filecheck-vue` inside those frameworks. Gate your submit button on `canProceed` and carry the `jobId` to your server.
 2. **Server** — before fulfilling, verify the submitted `jobId` with your secret key. Use `filecheck-node` or `filecheck/filecheck-php`; both encode the [verification checklist](/server/verify-jobs) in a single `verify()` call.
+
+Working from an AI agent instead of a storefront? [`filecheck-mcp`](/integrations/mcp) exposes checking, fixing, and the catalog as MCP tools for Claude, Cursor, and other MCP clients.
 
 <Note>
   Not on npm or Composer? The plain `<script>` embed works everywhere — see [Element on a custom stack](/tutorials/api-integration). No browser in the flow at all? Use the [headless API integration](/integrations/headless).

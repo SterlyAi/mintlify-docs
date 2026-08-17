@@ -121,7 +121,8 @@
               "integrations/react",
               "integrations/vue",
               "integrations/node",
-              "integrations/php"
+              "integrations/php",
+              "integrations/mcp"
             ]
           },
           {
