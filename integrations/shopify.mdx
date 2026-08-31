@@ -1,6 +1,6 @@
 ---
 title: "Shopify"
-description: "Add the Filecheck Element to a Shopify product page with a theme app extension and cart attributes."
+description: "Add the Filecheck Element to a Shopify product page with a theme app extension, line item properties and cart attributes."
 ---
 
 ## Overview
@@ -9,16 +9,45 @@ description: "Add the Filecheck Element to a Shopify product page with a theme a
   <Step title="Theme app extension block">
     Drop `<div id="fc-slot">` and the script tag onto the product page. Block settings: `workflowId`, `presentation`. Per-product via the metafield `filecheck.workflowId`.
   </Step>
-  <Step title="Cart attributes">
-    Write `jobId` to `cart.attributes['Filecheck Job']` via the AJAX Cart API once `canProceed === true`. Disable **Add to cart** client-side until then.
+  <Step title="Line item properties (per item — the source of truth)">
+    Once `canProceed === true`, the extension fills two hidden inputs inside the product form so they ride along on add to cart as **line item properties**: `_filecheck_job_id` (the job id) and `_filecheck_job_url` (a link to the job in your Filecheck dashboard). The leading underscore hides them from customer-facing pages; the Admin API sees them on each line item's `customAttributes`. Every upload item in the cart carries its own pair, so multi-item orders stay fully mapped. **Add to cart** stays disabled client-side until then.
+  </Step>
+  <Step title="Cart attribute (order-level convenience)">
+    The extension also writes `cart.attributes['Filecheck Job']` via the AJAX Cart API. This is a single order-level key holding the **most recently completed** job only — with two or more upload items in one cart, earlier values are overwritten. Use it for single-item flows and quick lookups; use the line item properties (or `GET /jobs?orderId=`) whenever an order can contain more than one upload item.
   </Step>
   <Step title="Order webhooks">
-    On `orders/paid`, read `note_attributes['Filecheck Job']`, call [`GET /jobs/{id}`](/server/verify-jobs) with your secret key, and attach the output file via the Files API.
+    On `orders/paid`, read `_filecheck_job_id` from each line item's properties (or `note_attributes['Filecheck Job']` for single-item carts), call [`GET /jobs/{id}`](/server/verify-jobs) with your secret key, and attach the output file via the Files API.
   </Step>
   <Step title="Embedded admin">
     Build a Polaris + App Bridge admin for key entry, the workflow picker, default presentation, and the metafield writer.
   </Step>
 </Steps>
+
+## Multiple upload items in one order
+
+An order can contain several upload products, each with its own Filecheck job. Two server-side ways to enumerate them all:
+
+**Per line item** — each line item carries its job reference as a property:
+
+```graphql
+{
+  order(id: "gid://shopify/Order/12984500650332") {
+    lineItems(first: 20) {
+      nodes { id customAttributes { key value } }
+    }
+  }
+}
+```
+
+Look for `_filecheck_job_id` on each node, then verify each job via [`GET /jobs/{id}`](/server/verify-jobs).
+
+**Per order** — reconcile from the Filecheck side with your secret key:
+
+```
+GET /jobs?orderId={numericShopifyOrderId}
+```
+
+Returns every job linked to that order. Jobs acquire their order linkage when Shopify's `orders/create` webhook reaches Filecheck (moments after checkout), so query after order creation rather than mid-checkout.
 
 ## Connector (optional)
 

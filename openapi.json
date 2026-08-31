@@ -171,7 +171,37 @@
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Return only the jobs linked to this shop order (e.g. a Shopify numeric order id). Jobs acquire their order linkage when the shop's order webhook fires, moments after checkout — query after order creation. The reconciliation path for carts holding several upload items."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 50
+            },
+            "description": "Maximum number of jobs to return."
+          },
+          {
+            "name": "nextKey",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Pagination cursor from the previous response."
+          }
+        ]
       }
     },
     "/jobs/{id}": {
