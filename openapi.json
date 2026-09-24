@@ -180,7 +180,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Return only the jobs linked to this shop order (e.g. a Shopify numeric order id). Jobs acquire their order linkage when the shop's order webhook fires, moments after checkout — query after order creation. The reconciliation path for carts holding several upload items."
+            "description": "Return only the jobs linked to this shop order (e.g. a Shopify numeric order id). When set, the response also carries `linked` (boolean) and, once known, `linkedAt`. `linked: false` means Filecheck has not processed the order webhook yet — retry. `linked: true` means the list is complete; an empty list then means the order has no Filecheck jobs."
           },
           {
             "name": "limit",

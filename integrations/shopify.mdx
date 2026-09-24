@@ -25,7 +25,7 @@ description: "Add the Filecheck Element to a Shopify product page with a theme a
 
 ## Multiple upload items in one order
 
-An order can contain several upload products, each with its own Filecheck job. Two server-side ways to enumerate them all:
+An order can contain several upload products, each with its own Filecheck job. Two server-side ways to enumerate them all. **The line item property is the contract**: it is on the order the moment Shopify creates it, with no dependency on timing. The order lookup below is a convenience for reconciling from the Filecheck side.
 
 **Per line item** — each line item carries its job reference as a property:
 
@@ -47,7 +47,15 @@ Look for `_filecheck_job_id` on each node, then verify each job via [`GET /jobs/
 GET /jobs?orderId={numericShopifyOrderId}
 ```
 
-Returns every job linked to that order. Jobs acquire their order linkage when Shopify's `orders/create` webhook reaches Filecheck (moments after checkout), so query after order creation rather than mid-checkout.
+Returns every job linked to that order, plus a `linked` flag. Jobs acquire their order linkage when Shopify's `orders/create` webhook reaches Filecheck, moments after checkout, and your own `orders/create` subscriber may run before ours does. `linked` tells the two cases apart:
+
+| Response | Meaning | What to do |
+|---|---|---|
+| `linked: false` | Filecheck has not processed this order yet. | Retry shortly (e.g. back off from 2s). |
+| `linked: true`, jobs present | The order is linked; the list is complete. | Use it. |
+| `linked: true`, `jobs: []` | The order was received and has no Filecheck uploads. | Stop; nothing to fetch. |
+
+`linked` is only set to `true` after every job in the order has been linked, so a `true` response never carries a partial list. Order links are retained for 180 days.
 
 ## Connector (optional)
 
