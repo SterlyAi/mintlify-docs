@@ -5,6 +5,15 @@ description: "Let customers approve automated changes before they proceed. How t
 
 When the merchant enables proofing on a [Workflow](/concepts/workflows), the Element renders a visual **soft-proof** of the file after automated changes (for example, RGB to CMYK conversion or a padded canvas) and asks the customer to sign off.
 
+## Flat pages or the product
+
+The Workflow's Soft-proofing step chooses what the customer approves on:
+
+- **Flat pages**: the proof pages, as they will print.
+- **A 3D Scene**: the artwork on the product itself, such as a mug, a folded leaflet, a booklet or a business card. See [3D Proofs](/concepts/3d-proofs).
+
+The approval gate works the same way with either one.
+
 ## The proof event
 
 The Element fires `proof` once pages are rendered:

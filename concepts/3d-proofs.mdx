@@ -1,0 +1,113 @@
+---
+title: "3D Proofs"
+description: "Show customers their artwork on the product, such as a mug, a folded leaflet, a booklet or a business card, and let them approve it there."
+---
+
+A **3D Proof** shows the customer's artwork on the product itself instead of on flat pages. It is part of [Soft-proofing](/concepts/soft-proofing): the customer reviews and approves the file the same way, only the preview changes.
+
+The artwork on the product is the same colour-proofed rendering as the flat proof, trimmed to the finished size. What the customer approves on the product is what you print.
+
+<Frame caption="A business card proof in the customer's proof popup">
+  <img src="/images/scene-product-page-popup.png" alt="The Proof Preview popup showing the customer's business card artwork on a card with rounded corners, with Sheet and Pages switches and Front and Low view buttons" />
+</Frame>
+
+## Four kinds of product
+
+<CardGroup cols={2}>
+  <Card title="3D product" icon="cube">
+    Mugs, bottles, apparel, flags. Upload your own model (GLB or OBJ) and mark which parts take the print.
+  </Card>
+  <Card title="Folded leaflet" icon="map">
+    Half fold, tri-fold, Z-fold, gate fold, or your own panel widths. No model needed.
+  </Card>
+  <Card title="Booklet" icon="book-open">
+    Page-turning booklets, catalogues and calendars, bound on the left, right or top edge.
+  </Card>
+  <Card title="Flat sheet" icon="id-card">
+    Flyers, postcards and business cards, front and back, with optional rounded corners.
+  </Card>
+</CardGroup>
+
+You build each product as a [3D Scene](/configuration/3d-scenes) in the Library, then choose it on a Workflow's Soft-proofing step.
+
+## What the customer sees
+
+- The proof opens on the product. The customer can drag to turn it and jump between the camera views you saved.
+- A leaflet can be turned over and opened, a sheet turned over, and a booklet's pages turned.
+- A switch next to the product (**3D**, **Folded**, **Booklet** or **Sheet**) and **Pages** shows the flat proof pages instead.
+- The issues summary stays one tap away, as in every proof.
+- Approving works exactly as it does for flat proofs.
+
+## How the artwork lands on the product
+
+Each kind reads the pages of the customer's file in a fixed order:
+
+| Kind | Page 1 | Page 2 | Further pages |
+| --- | --- | --- | --- |
+| **3D product** | Each print area shows the page set as its **Proof page**. | | |
+| **Folded leaflet** | The outside | The inside | Not shown |
+| **Flat sheet** | The front | The back. A one-page file shows plain paper there. | Not shown |
+| **Booklet** | The front cover | The first inside page | All shown, in order |
+
+### Products made from several files
+
+When an [Upload Rule](/configuration/upload-rules) asks for several files, for example one file for the front and one for the back, the proof puts them together in the order of the rule's upload slots. The first slot's pages come first. A business card with a **Front** slot and a **Back** slot shows the first file on the front and the second on the back.
+
+Opening the proof from any file opens the whole product, starting at that file's page.
+
+### Size
+
+Folded leaflets, booklets and flat sheets take their size from the customer's artwork, so one scene fits every size you sell. The size set in the scene is only for the preview, unless you turn on **This product only comes in this size**.
+
+A 3D product always uses the print-area sizes set in the scene.
+
+## Good to know
+
+<AccordionGroup>
+  <Accordion title="A proof keeps its scene">
+    A proof uses the scene as it was when the proof was made. Editing a scene changes the proofs for new uploads, not the ones already made. To see an edit on an existing file, upload it again.
+  </Accordion>
+  <Accordion title="Flat pages as a fallback">
+    If a device can't show 3D, or the product can't load, the proof shows the flat pages instead. The customer can still review and approve.
+  </Accordion>
+  <Accordion title="Product pages stay fast">
+    The 3D viewer only loads when a proof opens, so it adds nothing to your product page until then.
+  </Accordion>
+</AccordionGroup>
+
+## Show the proof in the product gallery
+
+With **3D Proof in Product Gallery** turned on in **Settings → Element**, the product's own photo gallery shows the customer's design on the product as soon as every uploaded file has its proof. The photos come back if a file is removed or replaced. Approval still happens in the proof popup.
+
+<Frame caption="Settings → Element">
+  <img src="/images/element-gallery-proof-setting.png" alt="The 3D Proof In Product Gallery switch turned on, with a Gallery Selector field below it" />
+</Frame>
+
+<Frame caption="The proof in place of the product photos on a WooCommerce store">
+  <img src="/images/scene-product-page.png" alt="A WooCommerce product page for business cards, where the product gallery shows the customer's uploaded card design on the card, next to the front and back uploads" />
+</Frame>
+
+Filecheck finds the gallery on these themes by itself:
+
+- **Shopify**: Dawn and other Online Store 2.0 themes, and classic themes
+- **WooCommerce**
+- **PrestaShop** 1.7 and 8 (Classic theme)
+- **OpenCart** 3 and 4
+- **Magento 2** (Luma)
+
+If the proof doesn't appear on your theme, set **Gallery Selector** to the CSS selector of the gallery's container, for example `.product-gallery`.
+
+<Note>
+  The gallery proof works with the official store plugins and with [`Filecheck.mount`](/element/presentation#show-the-proof-in-the-product-gallery). The workflow needs a 3D Scene on its Soft-proofing step.
+</Note>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Create a 3D Scene" icon="cube" href="/configuration/3d-scenes">
+    Build the product in the Scene Studio.
+  </Card>
+  <Card title="Build a Workflow" icon="diagram-project" href="/configuration/workflows">
+    Choose the scene on the Soft-proofing step.
+  </Card>
+</CardGroup>

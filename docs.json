@@ -42,7 +42,8 @@
               "concepts/workflows",
               "concepts/jobs",
               "concepts/remediation",
-              "concepts/soft-proofing"
+              "concepts/soft-proofing",
+              "concepts/3d-proofs"
             ]
           },
           {
@@ -66,6 +67,7 @@
               "configuration/workflows",
               "configuration/jobs",
               "configuration/presets",
+              "configuration/3d-scenes",
               "configuration/connectors"
             ]
           },

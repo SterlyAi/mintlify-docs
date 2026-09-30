@@ -1,0 +1,153 @@
+---
+title: "3D Scenes"
+description: "Build the product a 3D Proof shows the artwork on: a 3D model, a folded leaflet, a booklet or a flat sheet."
+---
+
+A **3D Scene** is the product a [3D Proof](/concepts/3d-proofs) shows the customer's artwork on. Scenes live in **Library → 3D Scenes**, and a Workflow uses one on its Soft-proofing step.
+
+<Frame caption="Library → 3D Scenes">
+  <img src="/images/scenes-library.png" alt="The 3D Scenes library listing flat sheets, booklets and leaflets, each with a thumbnail, its print areas and a Store or Customized badge" />
+</Frame>
+
+## Start from a Store scene
+
+The library comes with ready-made scenes marked **Store**:
+
+| Kind | Store scenes |
+| --- | --- |
+| **Folded leaflet** | Half fold, Tri-fold, Z-fold, Gate fold |
+| **Booklet** | Booklet, Wall calendar |
+| **Flat sheet** | Flyer, Postcard, Business card, Square card |
+
+Use them as they are, or open one and change it. Saving an edited Store scene gives you your own copy, marked **Customized**, and your workflows use it from then on.
+
+A 3D product always starts from your own model.
+
+## Create a scene
+
+<Steps>
+  <Step title="Open the Scene Studio">
+    Go to **Library → 3D Scenes** and click **New 3D Scene**.
+  </Step>
+  <Step title="Choose what you're setting up">
+    Pick **3D product**, **Folded leaflet**, **Booklet** or **Flat sheet**, and give the scene a **Title**.
+    <Frame>
+      <img src="/images/scene-kind-chooser.png" alt="The Scene Studio asking What are you setting up?, with 3D product, Folded leaflet, Booklet and Flat sheet options" />
+    </Frame>
+  </Step>
+  <Step title="Set up the product">
+    Fill in the cards on the right. They depend on the kind, as described below. The preview on the left updates as you go.
+  </Step>
+  <Step title="Check it with your own art">
+    The preview starts with a numbered test pattern, so you can see which page lands where and which way is up. Use the buttons under the preview to try real artwork, and **Test pattern** to go back.
+  </Step>
+  <Step title="Save">
+    Click **Save**. The library thumbnail is taken from the start view.
+  </Step>
+</Steps>
+
+## 3D product
+
+<Frame caption="A mug in the Scene Studio">
+  <img src="/images/scene-studio-model.png" alt="The Scene Studio showing a mug with a numbered test pattern, and the Model and Parts in this model cards" />
+</Frame>
+
+<Steps>
+  <Step title="Upload the model">
+    Drop a **GLB** or **OBJ** file on the preview, or choose one. GLB works best: one file with its materials. For OBJ, add its `.mtl` file too. Convert FBX files to GLB first. Models can be up to 60 MB.
+  </Step>
+  <Step title="Size and orientation">
+    In the **Model** card, set:
+    - **Real size (largest side, mm)**, so the print lands at its true size.
+    - **Up axis**: **Y up** for glTF and most tools, **Z up** for CAD tools such as Fusion or SketchUp.
+    - **Front view faces**: the centre of a print area, or the model's own front.
+  </Step>
+  <Step title="Mark the parts">
+    **Parts in this model** lists the model's meshes and materials. Set each one to **Print area**, **Colour part** or leave it at **—**. Materials are usually the cleanest choice.
+  </Step>
+  <Step title="Set up each print area">
+    Each print area has these settings:
+    - **Width mm**, **Height mm** and **Bleed mm**: the printed size. When the surface measures differently, the studio offers **Surface measures … use** to take the model's size.
+    - **Mapping**: how the art is laid on the surface. **Auto** picks for you; **Wrap (cylinder)** goes round mugs and bottles; **Flat** projects straight on; **Model's own UVs** keeps the model's mapping.
+    - **Finish**: Gloss, Silk, Matte or Uncoated.
+    - **Proof page**: which page of the customer's file this area shows.
+    - **Mirror**, **Upside down** and a rotation, for when the art comes out the wrong way.
+  </Step>
+  <Step title="Colour the other parts">
+    Under **Colour parts**, give each part its colour and its **Shine**.
+  </Step>
+</Steps>
+
+<Frame caption="Print areas and colour parts">
+  <img src="/images/scene-print-areas.png" alt="The Print areas card with width, height, bleed, mapping, finish and proof page, and the Colour parts card with a colour and a shine slider" />
+</Frame>
+
+## Folded leaflet
+
+<Frame caption="A tri-fold in the Scene Studio">
+  <img src="/images/scene-studio-fold.png" alt="The Scene Studio showing a tri-fold leaflet standing open, with the Fold style, Flat sheet and Panels and creases cards" />
+</Frame>
+
+- **Fold style**: Half fold, Tri-fold, Z-fold, Gate fold or Custom. **Opens** sets whether it opens from the side (upright creases) or from the top (level creases).
+- **Flat sheet**: the unfolded size, from a list (A4, A3, A5, US Letter, US Legal, Tabloid) or typed in. It is for the preview only: proofs use the size of the customer's artwork, unless you turn on **This product only comes in this size**.
+- **Panels & creases**:
+  - **Custom** lets you set each panel's width.
+  - Tri-folds and gate folds have a **Tuck-in allowance**, the amount the inner panels are narrower so they fold inside.
+  - **How open** sets every crease at once (**Almost flat**, **Half open**, **Standing**, **Just opened**), and a slider per crease fine-tunes it.
+  - **Lies on the table** picks the panel that stays still.
+  - **Inside (page 2) printed** sets whether the inside is **Turned left to right** or **Tumbled top to bottom**.
+- **Paper**: see [Paper](#paper).
+
+Page 1 of the customer's file is the outside and page 2 the inside. Panels count from the left of page 1, or from the top when the leaflet opens from the top.
+
+## Booklet
+
+<Frame caption="A booklet in the Scene Studio">
+  <img src="/images/scene-studio-booklet.png" alt="The Scene Studio showing an open booklet on pages 2 and 3, with the Binding, Page size and Opening and turning cards" />
+</Frame>
+
+- **Binding**: **Left edge** for most books, **Right edge** for right-to-left reading, or **Top edge** for calendars and notepads. **Shown** sets whether it lies open on a table or stands up.
+- **Page size**: one page's size, from a list (A4, A5, A6, US Letter, Half Letter, Square 210) or typed in, and **Pages in the preview**. Both are for the preview only: proofs use the page size and page count of the customer's file. **This product only comes in this page size** fixes the size; the page count still comes from the file.
+- **Opening & turning**:
+  - **How wide it opens**, and the **Page curve at the spine**.
+  - **Opens at**: the front cover or the first spread.
+  - The **Page turn** speed.
+  - **Customers turn pages by** clicking, dragging or the arrow keys. Turn each one on or off.
+- **Paper**: the inside pages' stock, weight and **Page thickness**. Turn on **Heavier cover** to give the cover its own stock and weight.
+
+## Flat sheet
+
+<Frame caption="A business card in the Scene Studio">
+  <img src="/images/scene-studio-sheet.png" alt="The Scene Studio showing a business card with rounded corners lying on a table, with the Size, Shape and display and Paper cards" />
+</Frame>
+
+- **Size**: from a list (business cards, A6 and 6 × 4 in postcards, DL, A5, A4, US Letter, Square 148) or typed in. It is for the preview only, unless you turn on **This product only comes in this size**.
+- **Shape & display**:
+  - **Rounded corners** in mm, with 0 for square corners.
+  - **Shown**: lying on a table or standing up.
+  - **Back (page 2) printed**: turned left to right or tumbled top to bottom.
+- **Paper**: see [Paper](#paper).
+
+Page 1 of the customer's file is the front and page 2 the back. A one-page file shows plain paper on the back. Customers click the sheet to turn it over.
+
+## Paper
+
+Leaflets, booklets and sheets have a **Paper** card:
+
+- **Stock**: Uncoated, Matte, Silk or Gloss. It sets how much the paper shines.
+- **Weight (gsm)**.
+- **Thickness (mm)**: leave it empty to work it out from the weight, or type the caliper of your stock.
+
+## Camera views
+
+Each scene comes with camera views, shown as buttons above the preview. To add your own, turn the preview to the angle you want and press **+**. In the **Camera views** card, choose the **start view**, which is what customers see first and what the library thumbnail shows. You can rename or delete the views you added.
+
+## Use a scene in a workflow
+
+Open the workflow, turn on **Soft-proofing**, and under **Show a preview to customer?** choose the scene. Scenes are listed by kind and name, for example *Sheet · Business card*. **Flat pages** keeps the flat proof, and **+ New scene…** opens the Scene Studio.
+
+<Frame caption="The Soft-proofing step">
+  <img src="/images/workflow-soft-proofing-previewer.png" alt="A workflow's Soft-proofing step turned on, with Sheet · Business card chosen under Show a preview to customer?" />
+</Frame>
+
+To show the proof in your product gallery as well, see [Show the proof in the product gallery](/concepts/3d-proofs#show-the-proof-in-the-product-gallery).

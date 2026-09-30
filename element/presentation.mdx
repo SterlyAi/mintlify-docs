@@ -55,5 +55,26 @@ whenReady(() => {
 - Gates all cart buttons matching the built-in selectors plus `cartButtonSelector` on `canProceed`.
 - Wires the built-in proof gallery (no host code required).
 - Injects optional `customCss` / `customJs`.
+- Shows the [3D Proof](/concepts/3d-proofs) in the product gallery when `galleryProof` is on.
 
 The only thing left to you is platform-specific work, such as writing `jobId` into a hidden field for [server-side verification](/server/verify-jobs).
+
+### Show the proof in the product gallery
+
+When the Workflow shows its proof on a [3D Scene](/configuration/3d-scenes), `Filecheck.mount` can put that proof in place of the product's photo gallery once every uploaded file has its proof. The photos come back if a file is removed or replaced. Approval stays in the proof popup.
+
+```js
+window.Filecheck.mount({
+  publishableKey: 'pk_live_…',
+  workflowId:     'wf_…',
+  galleryProof:    true,                 // off by default
+  gallerySelector: '.product-gallery',   // optional
+});
+```
+
+| Option | Type | Description |
+| --- | --- | --- |
+| `galleryProof` | `boolean` | Show the 3D Proof in the product gallery. Default `false`. The store plugins set it from **Settings → Element → 3D Proof in Product Gallery**. |
+| `gallerySelector` | `string` | CSS selector of the gallery's container. Only needed when the built-in selectors for Shopify, WooCommerce, PrestaShop, OpenCart and Magento themes miss your theme. |
+
+If no gallery is found on the page, nothing changes: the proof is still in the popup.

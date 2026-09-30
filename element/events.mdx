@@ -1,6 +1,6 @@
 ---
 title: "Events"
-description: "Subscribe to the Element lifecycle: ready, status, facts, ui, error, proof, and destroy."
+description: "Subscribe to the Element lifecycle: ready, status, facts, ui, error, proof, scene, and destroy."
 ---
 
 Subscribe with `intake.on(event, handler)`. It returns an unsubscribe function.
@@ -13,6 +13,7 @@ Subscribe with `intake.on(event, handler)`. It returns an unsubscribe function.
 | `ui` | UI changes after `update()` | the new UI |
 | `error` | A recoverable iframe error | `{ code, message }` |
 | `proof` | A soft-proof is ready | [`ProofPayload`](/concepts/soft-proofing) |
+| `scene` | The job's [3D Proof](/concepts/3d-proofs) is ready for the product gallery, or no longer is | `{ viewer }` (`null` when no longer ready) |
 | `destroy` | The element unmounts | — |
 
 ## Gate on status
