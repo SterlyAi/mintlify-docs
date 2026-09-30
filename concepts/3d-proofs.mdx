@@ -49,6 +49,8 @@ Each kind reads the pages of the customer's file in a fixed order:
 | **Flat sheet** | The front | The back. A one-page file shows plain paper there. | Not shown |
 | **Booklet** | The front cover | The first inside page | All shown, in order |
 
+A scene can also [supply some sides itself](/configuration/3d-scenes#sides-and-covers-you-supply), such as a coloured back on a single-sided business card or a printed back cover on a booklet. The customer's pages then fill the other sides in order: with a supplied back, a business card shows page 1 on the front.
+
 ### Products made from several files
 
 When an [Upload Rule](/configuration/upload-rules) asks for several files, for example one file for the front and one for the back, the proof puts them together in the order of the rule's upload slots. The first slot's pages come first. A business card with a **Front** slot and a **Back** slot shows the first file on the front and the second on the back.
