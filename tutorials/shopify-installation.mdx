@@ -19,6 +19,9 @@ description: "Install the Filecheck app, map a workflow to a product, and gate a
   <Step title="Install the app">
     Install Filecheck from the [Shopify App Store](https://apps.shopify.com/filecheck). Installation connects your store and provisions your account for you — there are no keys to copy or paste.
   </Step>
+  <Step title="Switch on the Filecheck app embed">
+    The app embed is what loads Filecheck on your storefront. Until it is on, your Filecheck dashboard shows a banner saying Filecheck is not showing on your storefront yet. Click **Open theme editor** in that banner, or in Shopify go to **Online Store → Themes → Customize → App embeds**. Turn on **Filecheck**, then click **Save**. The banner clears when you return to the dashboard.
+  </Step>
   <Step title="Start from onboarding">
     Once installed, you are taken straight to the Filecheck admin dashboard and an onboarding screen. From here you can either assign the built-in **default workflow** to a product to test quickly, or create your own **Workflow** and assign it. Assigning a workflow to a product is called **mapping**.
 
@@ -38,7 +41,7 @@ description: "Install the Filecheck app, map a workflow to a product, and gate a
 </Steps>
 
 <Note>
-  **Not seeing the upload form on a mapped product?** By default Filecheck loads a script that finds the right spot on your product page and injects the upload form automatically, so in almost all cases you do **not** need to touch your theme. In rare cases (~0.5%) where a theme does not follow standard conventions — for example, no standard cart form — you may need to add the **Filecheck app block** to your product template in the theme editor. If a mapped product still does not show the form, [contact us](mailto:support@filecheck.io) and we will check it for you or add the block to that product page.
+  **Not seeing the upload form on a mapped product?** First check that the **Filecheck** app embed is on and saved in your **live** theme. Turning it on in an unpublished theme doesn't affect your storefront. With the embed on, Filecheck loads a script that finds the right spot on your product page and injects the upload form automatically, so in almost all cases you do **not** need to touch your theme. In rare cases (~0.5%) where a theme does not follow standard conventions — for example, no standard cart form — you may need to add the **Filecheck Intake** app block to your product template in the theme editor. If a mapped product still does not show the form, [contact us](mailto:support@filecheck.io) and we will check it for you or add the block to that product page.
 </Note>
 
 ## Works with Print Options and Print.App
