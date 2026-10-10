@@ -245,6 +245,16 @@
     "socials": {
       "x": "https://x.com/filecheckio",
       "linkedin": "https://linkedin.com/company/filecheckio"
-    }
+    },
+    "links": [
+      {
+        "header": "Trust",
+        "items": [
+          { "label": "Security and GDPR", "href": "https://filecheck.io/security" },
+          { "label": "Data Processing Agreement", "href": "https://filecheck.io/company/dpa" },
+          { "label": "Privacy policy", "href": "https://filecheck.io/company/privacy" }
+        ]
+      }
+    ]
   }
 }
