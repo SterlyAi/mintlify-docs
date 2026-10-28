@@ -1,8 +1,14 @@
-// Build mintlify-docs/openapi.json from the live filecheck-api request schemas.
+// Build mintlify-docs/openapi.json from the filecheck-api repo.
 //
-// Reads the canonical JSON Schemas from the filecheck-api repo and embeds them
-// verbatim (rewriting their internal #/$defs refs so they resolve under
-// components/schemas), then assembles the full OpenAPI 3.1 document.
+// Two sources there:
+//   - api/routes.mjs, the list of every public operation. The account
+//     resources (workflows, rules, profiles, connectors, optimize presets,
+//     destinations, product mappings, settings, webhooks) are generated from
+//     it; the job endpoints below are still written out by hand.
+//   - the JSON Schemas: the job request schemas in
+//     _layers/mixins/nodejs/schemas and the resource schemas in api/schemas,
+//     embedded verbatim (their internal #/ refs rewritten so they resolve
+//     under components/schemas).
 //
 // Usage (from the repo root):
 //   node scripts/build-openapi.mjs
@@ -10,32 +16,37 @@
 // By default it expects filecheck-api to be a sibling of this repo:
 //   <parent>/filecheck-api
 //   <parent>/mintlify-docs   <- this repo
-// Override the schema location with FILECHECK_API_SCHEMAS=/abs/path if needed.
+// Override with FILECHECK_API=/abs/path/to/filecheck-api if needed.
 //
 // Re-run this whenever the API request schemas or endpoints change. Do not
 // hand-edit openapi.json.
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '..');
 
-const SCHEMA_DIR = process.env.FILECHECK_API_SCHEMAS
-  || path.resolve(REPO_ROOT, '..', 'filecheck-api', '_layers', 'mixins', 'nodejs', 'schemas');
+const API_ROOT = process.env.FILECHECK_API || path.resolve(REPO_ROOT, '..', 'filecheck-api');
+const SCHEMA_DIR = process.env.FILECHECK_API_SCHEMAS || path.join(API_ROOT, '_layers', 'mixins', 'nodejs', 'schemas');
+const RESOURCE_SCHEMA_DIR = path.join(API_ROOT, 'api', 'schemas');
 const OUT = path.resolve(REPO_ROOT, 'openapi.json');
 
-if (!fs.existsSync(SCHEMA_DIR)) {
-  console.error(`Schema directory not found: ${SCHEMA_DIR}`);
-  console.error('Set FILECHECK_API_SCHEMAS to the filecheck-api schemas folder and retry.');
-  process.exit(1);
+for (const dir of [SCHEMA_DIR, RESOURCE_SCHEMA_DIR]) {
+  if (!fs.existsSync(dir)) {
+    console.error(`Schema directory not found: ${dir}`);
+    console.error('Set FILECHECK_API to the filecheck-api checkout and retry.');
+    process.exit(1);
+  }
 }
+
+const routes = await import(pathToFileURL(path.join(API_ROOT, 'api', 'routes.mjs')).href);
 
 // Load a request schema verbatim, strip $schema/$id, and rewrite in-document
 // refs (#/...) so they resolve under this component's location.
-function loadSchema(file, name) {
-  const raw = JSON.parse(fs.readFileSync(path.join(SCHEMA_DIR, file), 'utf8'));
+function loadSchema(file, name, dir = SCHEMA_DIR) {
+  const raw = JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8'));
   delete raw.$schema;
   delete raw.$id;
   const base = `#/components/schemas/${name}/`;
@@ -74,30 +85,94 @@ const jobSubmissionResponses = {
   '403': { description: 'A referenced fileRef is not owned by the caller', content: json('#/components/schemas/Error') },
 };
 
-function resourcePaths(collection, itemName, listKey, itemKey) {
-  return {
-    [`/${collection}`]: {
-      get: {
-        tags: [itemName + 's'],
-        summary: `List ${collection}`,
-        description: `Lists ${collection} (domain-scoped entries merged with the built-in store catalog). Each item is tagged with a \`source\` of \`domain\` or \`store\`.`,
-        responses: {
-          '200': { description: 'OK', content: { 'application/json': { schema: { type: 'object', properties: { [listKey]: { type: 'array', items: { $ref: `#/components/schemas/${itemName}` } } } } } } },
-          ...errorResponses,
-        },
-      },
+// ---- account resources, generated from api/routes.mjs ----------------------
+
+const pascal = id => id.split(/[-_]/).map(part => part[0].toUpperCase() + part.slice(1)).join('');
+
+// api/schemas/<id>.json → component <Pascal id>: the writable record, also
+// the request body of its create and update operations.
+const resourceSchemas = Object.fromEntries(fs.readdirSync(RESOURCE_SCHEMA_DIR)
+  .filter(file => file.endsWith('.json'))
+  .map(file => {
+    const name = pascal(file.replace(/\.json$/, ''));
+    return [name, loadSchema(file, name, RESOURCE_SCHEMA_DIR)];
+  }));
+
+// What a stored record carries besides its writable fields.
+const RecordFields = {
+  type: 'object',
+  properties: {
+    id: { type: 'string', description: 'The record id.' },
+    source: { type: 'string', enum: ['domain', 'store'], description: '`domain`: yours. `store`: a built-in catalog record.' },
+    customized: { type: 'boolean', description: 'Your own copy of a built-in record, under the same id. Revert drops it.' },
+    draft: { type: 'boolean', description: 'Present and true on an unpublished draft.' },
+    draftExpiresAt: { type: 'string', format: 'date-time', description: 'When an unpublished draft is deleted.' },
+    created: { type: 'integer', description: 'Unix time (seconds).' },
+    modified: { type: 'integer', description: 'Unix time (seconds).' },
+  },
+};
+
+// Response shapes that have no request schema.
+const responseOnly = {
+  Deleted: { type: 'object', properties: { id: { type: 'string' }, deleted: { type: 'boolean', const: true } } },
+  DestinationTest: { type: 'object', description: 'What the test delivery did: whether it connected and wrote the sample file, and the error when it did not.', additionalProperties: true },
+  WebhookTest: { type: 'object', properties: { ok: { type: 'boolean' }, status: { type: ['integer', 'null'], description: 'The HTTP status your endpoint answered.' }, error: { type: ['string', 'null'] } } },
+  WebhookEvent: { type: 'object', properties: { key: { type: 'string' }, label: { type: 'string' }, group: { type: 'string' } } },
+  StoreProduct: {
+    type: 'object',
+    properties: {
+      id: { type: 'string', description: 'The product id in your store.' },
+      title: { type: 'string' }, url: { type: ['string', 'null'] }, status: { type: ['string', 'null'] },
+      workflowId: { type: ['string', 'null'], description: 'The workflow it is mapped to, if any.' },
+      variants: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, title: { type: 'string' }, sku: { type: ['string', 'null'] }, workflowId: { type: ['string', 'null'] } } } },
     },
-    [`/${collection}/{id}`]: {
-      get: {
-        tags: [itemName + 's'],
-        summary: `Get a ${itemName.toLowerCase()}`,
-        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
-        responses: {
-          '200': { description: 'OK', content: { 'application/json': { schema: { type: 'object', properties: { [itemKey]: { $ref: `#/components/schemas/${itemName}` } } } } } },
-          '404': { description: 'Not found', content: json('#/components/schemas/Error') },
-          ...errorResponses,
-        },
+  },
+};
+
+const ERROR_STATUS = {
+  400: 'Invalid request: `code` says why, `param` names the field, `details` lists every problem',
+  402: 'Job submissions are paused: the credit balance is exhausted',
+  403: 'Not allowed',
+  404: 'Not found',
+  409: 'Conflict: `code` says why (in_use, draft_reference, not_a_draft, not_a_catalog_record, cart_not_supported)',
+};
+
+const responseSchemaFor = ({ schema }) => {
+  if (resourceSchemas[pascal(schema)]) return { allOf: [{ $ref: `#/components/schemas/${pascal(schema)}` }, { $ref: '#/components/schemas/RecordFields' }] };
+  if (responseOnly[pascal(schema)]) return { $ref: `#/components/schemas/${pascal(schema)}` };
+  throw new Error(`no schema for response ${schema}`);
+};
+
+const generatedPaths = {};
+for (const op of routes.operations.filter(o => o.response)) {
+  const item = responseSchemaFor(op.response);
+  const payload = {
+    type: 'object',
+    properties: {
+      [op.response.key]: op.response.list ? { type: 'array', items: item } : item,
+      ...(op.query?.some(q => q.name === 'dryRun') && { dryRun: { type: 'boolean', description: 'Present and true when nothing was saved.' } }),
+      ...(op.id.startsWith('publish') && { published: { type: 'array', items: { type: 'string' }, description: 'Every id published, dependencies first.' } }),
+      ...(op.id.startsWith('revert') && { reverted: { type: 'boolean', description: 'False when there was no copy to drop.' } }),
+      ...(op.response.list && op.id === 'searchProducts' && { hasMore: { type: 'boolean' }, nextCursor: { type: ['string', 'null'] } }),
+    },
+  };
+  const statuses = [...new Set([...(op.body ? [400] : []), ...(op.errors || [])])];
+  (generatedPaths[op.path] ??= {})[op.method.toLowerCase()] = {
+    operationId: op.id,
+    tags: [op.tag],
+    summary: op.summary,
+    ...(op.description && { description: op.description }),
+    ...((op.params || op.query) && { parameters: [...(op.params || []), ...(op.query || [])] }),
+    ...(op.body && {
+      requestBody: {
+        required: true,
+        content: { 'application/json': { schema: { $ref: `#/components/schemas/${pascal(op.body)}` } } },
       },
+    }),
+    responses: {
+      [String(op.status || 200)]: { description: 'OK', content: { 'application/json': { schema: payload } } },
+      ...Object.fromEntries(statuses.map(status => [String(status), { description: ERROR_STATUS[status], content: json('#/components/schemas/Error') }])),
+      '401': errorResponses['401'],
     },
   };
 }
@@ -109,23 +184,18 @@ const spec = {
   jsonSchemaDialect: 'https://json-schema.org/draft/2020-12/schema',
   info: {
     title: 'Filecheck API',
-    version: '1.0.0',
-    description: 'The Filecheck REST API. Submit files as jobs, fetch results, and read your workflows, rules, connectors, profiles, and optimize presets. All requests are authenticated server-side with your secret key (`sk_live_…`).',
+    version: '1.1.0',
+    description: 'The Filecheck REST API. Submit files as jobs and fetch results, and set up your account: workflows, upload rules, preflight profiles, connectors, optimize presets, delivery destinations, product mappings, storefront settings and webhooks. All requests are authenticated server-side with your secret key (`sk_live_…`).',
   },
   servers: [{ url: 'https://api.filecheck.io', description: 'Production' }],
   security: [{ bearerAuth: [] }],
-  tags: [
-    { name: 'Jobs', description: 'Submit files for preflight, fixing, optimization, validation, and previews.' },
-    { name: 'Uploads', description: 'Mint presigned credentials to upload large files directly.' },
-    { name: 'Orders', description: 'Attach jobs to commerce orders.' },
-    { name: 'Workflows' }, { name: 'Connectors' }, { name: 'Rules' }, { name: 'Profiles' }, { name: 'OptimizePresets' },
-  ],
+  tags: routes.tags,
   paths: {
     '/jobs': {
       post: {
         tags: ['Jobs'],
         summary: 'Submit a job',
-        description: 'Canonical job submission. Each entry in `sources[]` is one source file plus the ordered `steps[]` to run on it. Async (201) by default; set `sync: true` to wait up to ~27s.',
+        description: 'Canonical job submission. Each entry in `sources[]` is one source file plus the ordered `steps[]` to run on it, unless `ruleId`, `workflowId` or `previewWorkflow` decides the steps: then the files go through that intake, as on the storefront. Draft rules and workflows work too, and `previewWorkflow` runs an unsaved one, so a setup can be tried on real files before it goes live. Async (201) by default; set `sync: true` to wait up to ~27s.',
         requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/JobsPost' } } } },
         responses: jobSubmissionResponses,
       },
@@ -184,11 +254,7 @@ const spec = {
         responses: { '200': { description: 'Order captured' }, ...errorResponses },
       },
     },
-    ...resourcePaths('workflows', 'Workflow', 'workflows', 'workflow'),
-    ...resourcePaths('connectors', 'Connector', 'connectors', 'connector'),
-    ...resourcePaths('rules', 'Rule', 'rules', 'rule'),
-    ...resourcePaths('profiles', 'Profile', 'profiles', 'profile'),
-    ...resourcePaths('optimize-presets', 'OptimizePreset', 'presets', 'preset'),
+    ...generatedPaths,
   },
   components: {
     securitySchemes: {
@@ -282,18 +348,20 @@ const spec = {
       JobResponse: { type: 'object', properties: { job: { $ref: '#/components/schemas/Job' } } },
       JobPendingResponse: { type: 'object', properties: { pending: { type: 'boolean' }, job: { $ref: '#/components/schemas/Job' } } },
       RunsResponse: { type: 'object', properties: { runs: { type: 'array', items: { $ref: '#/components/schemas/Run' } } } },
-      Resource: {
+      ...resourceSchemas,
+      RecordFields,
+      ...responseOnly,
+      Error: {
         type: 'object',
-        description: 'Library resources share a common envelope. Each carries an id, a human label, an enabled flag, and a `source` of `domain` or `store`.',
-        properties: { id: { type: 'string' }, name: { type: 'string' }, enabled: { type: 'boolean' }, source: { type: 'string', enum: ['domain', 'store'] } },
-        additionalProperties: true,
+        properties: {
+          error: { type: 'boolean', const: true },
+          code: { type: 'string', description: 'Machine-readable reason, such as validation_failed, invalid_reference, not_found, in_use, draft_reference.' },
+          message: { type: 'string' },
+          param: { type: 'string', description: 'The field at fault, as a dotted path (intake.ruleId, accepts.0.preflight.profileId).' },
+          details: { type: 'array', description: 'Every problem found, or the records that block a delete.', items: { type: 'object', additionalProperties: true } },
+          requestId: { type: 'string', description: 'Quote it to support.' },
+        },
       },
-      Workflow: { allOf: [{ $ref: '#/components/schemas/Resource' }] },
-      Connector: { allOf: [{ $ref: '#/components/schemas/Resource' }] },
-      Rule: { allOf: [{ $ref: '#/components/schemas/Resource' }] },
-      Profile: { allOf: [{ $ref: '#/components/schemas/Resource' }] },
-      OptimizePreset: { allOf: [{ $ref: '#/components/schemas/Resource' }] },
-      Error: { type: 'object', properties: { error: { type: 'boolean' }, message: { type: 'string' } } },
     },
   },
 };

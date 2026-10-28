@@ -183,18 +183,102 @@
             ]
           },
           {
-            "group": "Library",
+            "group": "Workflows",
             "pages": [
               "GET /workflows",
               "GET /workflows/{id}",
-              "GET /connectors",
-              "GET /connectors/{id}",
+              "POST /workflows",
+              "PATCH /workflows/{id}",
+              "DELETE /workflows/{id}",
+              "POST /workflows/{id}/publish",
+              "POST /workflows/{id}/revert"
+            ]
+          },
+          {
+            "group": "Rules",
+            "pages": [
               "GET /rules",
               "GET /rules/{id}",
+              "POST /rules",
+              "PATCH /rules/{id}",
+              "DELETE /rules/{id}",
+              "POST /rules/{id}/publish",
+              "POST /rules/{id}/revert"
+            ]
+          },
+          {
+            "group": "Profiles",
+            "pages": [
               "GET /profiles",
               "GET /profiles/{id}",
+              "POST /profiles",
+              "PATCH /profiles/{id}",
+              "DELETE /profiles/{id}",
+              "POST /profiles/{id}/publish",
+              "POST /profiles/{id}/revert"
+            ]
+          },
+          {
+            "group": "Connectors",
+            "pages": [
+              "GET /connectors",
+              "GET /connectors/{id}",
+              "POST /connectors",
+              "PATCH /connectors/{id}",
+              "DELETE /connectors/{id}",
+              "POST /connectors/{id}/publish",
+              "POST /connectors/{id}/revert"
+            ]
+          },
+          {
+            "group": "Optimize presets",
+            "pages": [
               "GET /optimize-presets",
-              "GET /optimize-presets/{id}"
+              "GET /optimize-presets/{id}",
+              "POST /optimize-presets",
+              "PATCH /optimize-presets/{id}",
+              "DELETE /optimize-presets/{id}",
+              "POST /optimize-presets/{id}/publish",
+              "POST /optimize-presets/{id}/revert"
+            ]
+          },
+          {
+            "group": "Destinations",
+            "pages": [
+              "GET /destinations",
+              "GET /destinations/{id}",
+              "POST /destinations",
+              "PATCH /destinations/{id}",
+              "DELETE /destinations/{id}",
+              "POST /destinations/{id}/test"
+            ]
+          },
+          {
+            "group": "Products",
+            "pages": [
+              "GET /product-maps",
+              "PUT /product-maps/{id}",
+              "DELETE /product-maps/{id}",
+              "GET /products"
+            ]
+          },
+          {
+            "group": "Settings",
+            "pages": [
+              "GET /settings",
+              "PATCH /settings"
+            ]
+          },
+          {
+            "group": "Webhooks",
+            "pages": [
+              "GET /webhook-events",
+              "GET /webhooks",
+              "GET /webhooks/{id}",
+              "POST /webhooks",
+              "PATCH /webhooks/{id}",
+              "DELETE /webhooks/{id}",
+              "POST /webhooks/{id}/test"
             ]
           }
         ]
@@ -250,9 +334,18 @@
       {
         "header": "Trust",
         "items": [
-          { "label": "Security and GDPR", "href": "https://filecheck.io/security" },
-          { "label": "Data Processing Agreement", "href": "https://filecheck.io/company/dpa" },
-          { "label": "Privacy policy", "href": "https://filecheck.io/company/privacy" }
+          {
+            "label": "Security and GDPR",
+            "href": "https://filecheck.io/security"
+          },
+          {
+            "label": "Data Processing Agreement",
+            "href": "https://filecheck.io/company/dpa"
+          },
+          {
+            "label": "Privacy policy",
+            "href": "https://filecheck.io/company/privacy"
+          }
         ]
       }
     ]
