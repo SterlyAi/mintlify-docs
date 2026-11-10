@@ -5,27 +5,32 @@ description: "Share a product page with a design tool, so shoppers can either up
 
 Some product pages offer two ways to buy: upload a finished file through Filecheck, or design one in a product customizer. Without coordination, each tool gates **Add to cart** on its own, so each blocks the shopper who chose the other.
 
-When the Element runs its own cart gate (the store plugins, or `Filecheck.mount`), it owns **Add to cart** for both. A customizer tells it when the shopper's design is in, through three `window` events. Nothing else is shared: each tool keeps its own cart fields.
+When the Element runs its own cart gate (the store plugins, or `Filecheck.mount`) and finds the page's Add to cart button, it owns **Add to cart** for both. A customizer tells it when the shopper's design is in, through three `window` events. Nothing else is shared: each tool keeps its own cart fields.
 
 <Note>
   Print.App uses these events. Any other customizer can use them the same way.
 </Note>
 
-## How Add to cart behaves
+## Who owns the cart line
+
+The last thing the shopper did owns the line:
+
+- **Started an upload:** the upload owns it. Add to cart waits for the file to pass, and a file that fails blocks until it is removed or replaced. Removing it hands the line back to a design that is still in.
+- **Saved a design after that:** the Element resets the upload, so its job leaves the cart form. The customizer's message shows under the upload box.
+- **Uploaded after a design:** once the file passes, the Element tells the customizer (`takeover`), which removes its own design from the cart form.
+
+What a page reload brings back (a remembered design, a resumed upload) is not a new action, so it never resets the other side.
+
+Before the shopper has done anything:
 
 | The customizer requires a design | The upload is required | Add to cart is enabled when |
 |---|---|---|
-| no | no | always |
+| no | no | the upload box allows it: always, unless a file is uploading or failed |
 | yes | no | a design is in, or a file passed |
 | no | yes | a file passed, or a design is in |
 | yes | yes | a file passed, or a design is in |
 
-The last thing the shopper did owns the cart line:
-
-- **Designed last:** the Element resets the upload, so its job leaves the cart form. The customizer's message shows under the upload box.
-- **Uploaded last:** once the file passes, the Element tells the customizer, which removes its own design from the cart form.
-
-Only the file that will be printed reaches the order.
+A button the theme disabled itself (a sold-out variant) is never enabled by the Element.
 
 ## The events
 
@@ -34,10 +39,10 @@ All three are `CustomEvent`s on `window`, with their data in `detail`.
 ### `filecheck:ready` (Element to page)
 
 ```js
-{ version: 1, gate: true, status: { status, canProceed, jobId, filesIn } }
+{ version: 1, gate: true, status: { status, canProceed, jobId, filesIn, owner, takeover } }
 ```
 
-Sent when the Element mounts, and again when a customizer it has not heard from speaks up. When a customizer hears it, the Element owns Add to cart: stop hiding or disabling the button yourself.
+Sent once the Element holds an Add to cart button, and again when a customizer it has not heard from speaks up. When a customizer hears it, the Element owns Add to cart: stop hiding or disabling the button yourself. If the page has no button the Element recognises, it is never sent, and your own gate stays in charge.
 
 ### `filecheck:alternative` (customizer to Element)
 
@@ -49,39 +54,38 @@ Sent when the Element mounts, and again when a customizer it has not heard from 
 |---|---|---|
 | `source` | string | A stable id for your customizer: letters, digits, `_ . : -`, up to 64 characters. |
 | `done` | boolean | The shopper's design is in the cart form. |
-| `required` | boolean | Optional. Your own "a design is required" setting. |
+| `required` | boolean | Optional. Your own "a design is required" setting. Send `false` when your editor can't be used, so a broken customizer never stops a sale. |
 | `message` | string | Optional. Shown under the upload box while the design owns the line, in your own language (up to 300 characters). |
 
-Send it once on start, since the Element may already be on the page, and again whenever `done` changes.
+Send it once on start (the Element may already be on the page), whenever it changes, and in answer to every `filecheck:ready`: the store plugins mount a fresh Element after each add to cart, and it starts knowing nothing.
 
 ### `filecheck:status` (Element to page)
 
 ```js
-{ status: 'ready', canProceed: true, jobId: 'job_…', filesIn: true }
+{ status: 'ready', canProceed: true, jobId: 'job_…', filesIn: true, owner: 'upload', takeover: true }
 ```
 
-Sent on every upload status change. `filesIn: true` means a file passed and now owns the line: remove your design from the cart form, then send `done: false`.
+Sent on every upload status change. `owner` is what the line carries now: `'upload'`, a customizer's `source`, or `null`. `takeover: true` comes once, when an upload the shopper made after a design passes: remove your design from the cart form (your own fields only, without reloading the page), then send `done: false`.
 
 ## Example
 
 ```js
 const SOURCE = 'my-customizer';
 let designIn = false;
-let filecheckGates = false;
+let editorWorks = true;
 
 const tell = () => window.dispatchEvent(new CustomEvent('filecheck:alternative', {
-  detail: { source: SOURCE, done: designIn, required: true, message: 'Using your design.' },
+  detail: { source: SOURCE, done: designIn, required: editorWorks, message: 'Using your design.' },
 }));
 
 window.addEventListener('filecheck:ready', () => {
-  filecheckGates = true;   // stop gating Add to cart yourself
-  showAddToCart();
+  showAddToCart();   // stop gating Add to cart yourself
   tell();
 });
 
 window.addEventListener('filecheck:status', (e) => {
-  if (e.detail.filesIn && designIn) {
-    removeDesignFromCartForm();   // your own fields only
+  if (e.detail.takeover && designIn) {
+    removeDesignFromCartForm();   // your own fields only, no reload
     designIn = false;
     tell();
   }
@@ -89,6 +93,7 @@ window.addEventListener('filecheck:status', (e) => {
 
 onDesignSaved(() => { designIn = true; tell(); });
 onDesignRemoved(() => { designIn = false; tell(); });
+onEditorFailed(() => { editorWorks = false; tell(); });
 
 tell();   // the Element may already be there
 ```
