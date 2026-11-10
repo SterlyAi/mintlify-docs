@@ -97,7 +97,8 @@
               "element/create-and-mount",
               "element/events",
               "element/presentation",
-              "element/connectors"
+              "element/connectors",
+              "element/customizers"
             ]
           },
           {
