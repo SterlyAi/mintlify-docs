@@ -13,7 +13,7 @@ Filecheck ships six official libraries. The browser packages are thin, typed wra
 | [`filecheck-vue`](/integrations/vue) | npm | Vue 3 component and composable wrapping the Element |
 | [`filecheck-node`](/integrations/node) | npm | Node.js server SDK — jobs, uploads, webhooks, `jobs.verify()` |
 | [`filecheck/filecheck-php`](/integrations/php) | Packagist | PHP server SDK, mirroring the Node.js SDK |
-| [`filecheck-mcp`](/integrations/mcp) | npm | MCP server — check and fix print files from Claude, Cursor, and other AI agents |
+| [`filecheck-mcp`](/mcp/server) | npm | MCP server — check and fix print files and set up your products from ChatGPT, Claude, Cursor, and other AI agents |
 
 ## Install
 
@@ -47,7 +47,7 @@ A complete integration has two halves, and you typically pick one package from e
 1. **Client** — embed the Element so customers upload, see findings, and get auto-fixes. Use `filecheck-js` on vanilla stacks, or `filecheck-react` / `filecheck-vue` inside those frameworks. Gate your submit button on `canProceed` and carry the `jobId` to your server.
 2. **Server** — before fulfilling, verify the submitted `jobId` with your secret key. Use `filecheck-node` or `filecheck/filecheck-php`; both encode the [verification checklist](/server/verify-jobs) in a single `verify()` call.
 
-Working from an AI agent instead of a storefront? [`filecheck-mcp`](/integrations/mcp) exposes checking, fixing, and the catalog as MCP tools for Claude, Cursor, and other MCP clients.
+Working from an AI agent instead of a storefront? [`filecheck-mcp`](/mcp/server) gives ChatGPT, Claude, Cursor, and other MCP clients tools to check and fix files and to set up workflows, rules, profiles, products and delivery. See the [AI agents](/mcp/server) section.
 
 <Note>
   Not on npm or Composer? The plain `<script>` embed works everywhere — see [Element on a custom stack](/tutorials/api-integration). No browser in the flow at all? Use the [headless API integration](/integrations/headless).

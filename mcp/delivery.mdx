@@ -1,0 +1,48 @@
+---
+title: "Set up delivery with AI"
+description: "Let your AI assistant set up where finished files go (SFTP and FTP hotfolders, S3, email or a webhook), send a test delivery, and add webhooks for job and proof events."
+---
+
+When a job is done, Filecheck can deliver the print-ready files on its own: into the hotfolder your prepress or MIS system watches, into an S3 bucket, by email, or to a webhook such as a Zapier hook. Connected to the [Filecheck MCP server](/mcp/server), your AI assistant sets up the destination, tests it, and adds it to the workflows that should deliver there.
+
+## Ask for it
+
+Tell it where the files should go:
+
+```text
+Send finished business cards to our SFTP hotfolder at sftp.printshop.com, folder /incoming/cards,
+named by order number. Test it before any real order goes there.
+```
+
+More examples:
+
+- *"Copy every finished file to our S3 bucket print-jobs under the folder filecheck/{orderId}."*
+- *"Email the print files to prepress@printshop.com when a job is done."*
+- *"Put a JSON file with the order details next to each PDF in the hotfolder, so our MIS picks up both."*
+- *"Call our Zapier hook when a proof is approved."*
+
+## What the assistant does
+
+<Steps>
+  <Step title="Builds the destination">
+    It reads the destination schema and saves one for the transport you named: `sftp`, `ftp`, `s3`, `email` or `webhook`, with the folder or key layout you described. Folder paths take tokens such as `{orderId}`, `{sku}` and `{product}`, and hotfolders can get a metadata sidecar next to each print file, uploaded after it so the watcher never picks up a half-written file.
+  </Step>
+  <Step title="Tests it, when you agree">
+    A test delivery sends a sample order (TEST-1001, a one-page `Sample_Product.pdf`) through the real transport and reports whether it arrived. Hotfolders really receive the file and email really goes out, where your print workflow may pick it up, so the assistant asks first.
+  </Step>
+  <Step title="Adds it to the workflow">
+    It adds the destination to the workflows that should deliver there. Delivery runs once per job, after it is done; each destination is tried once, and a failure on one doesn't stop the others.
+  </Step>
+</Steps>
+
+<Warning>
+  Passwords, private keys and webhook header values are write-only: they are encrypted when saved and always read back as `********`. If you'd rather not share one in the chat, ask the assistant to create the destination without it, then add it yourself in the dashboard under **Library → Destinations**.
+</Warning>
+
+## Webhooks
+
+Webhooks tell your own systems when something happens on your account: a job created, completed or delivered, a proof ready or approved, settings changed, credits running low. The assistant lists the events, creates the webhook for the ones you want, and sends it a signed test event to show what your receiver answers. Each call is a JSON POST signed with `X-FileCheck-Signature`; see [Webhooks](/server/webhooks) for verifying it.
+
+## For developers
+
+The same features are in the [REST API](/api-reference/introduction): [create a destination](/api-reference/destinations/create-a-destination), [test it](/api-reference/destinations/test-a-destination), and [create a webhook](/api-reference/webhooks/create-a-webhook). The tools are listed on the [MCP server](/mcp/server#tools) page.

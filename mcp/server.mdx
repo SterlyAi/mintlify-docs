@@ -1,62 +1,59 @@
 ---
 title: "MCP server"
-sidebarTitle: "MCP"
 description: "Connect ChatGPT, Claude, Cursor, Codex or any MCP client to Filecheck, then ask it to check and fix print files and set up your products."
 ---
 
-`filecheck-mcp` is a [Model Context Protocol](https://modelcontextprotocol.io) server for the Filecheck API. Once it is connected, an AI agent can:
+<Tip>
+  Using an AI agent such as Claude Code, Codex or Cursor? Give it the [Quickstart for agents](/mcp/quickstart-agents) and it connects itself.
+</Tip>
 
-- **Check files:** preflight a PDF or image, fix bleed, colour and fonts, validate PDF/A and PDF/UA, and render page previews. Every file it checks is a normal Filecheck job on your account, so it shows up in your dashboard like any other.
-- **Set up your products:** build workflows, upload rules and preflight profiles for a product, map products in your store to a workflow, and set up where finished files go and which webhooks fire.
+`filecheck-mcp` is a [Model Context Protocol](https://modelcontextprotocol.io) server for the Filecheck API. It lets AI tools work in your Filecheck account. The hosted server is at:
+
+```
+https://api.filecheck.io/mcp
+```
+
+## What you can do
+
+- **Check files:** preflight a PDF or image, fix bleed, colour and fonts, validate PDF/A and PDF/UA, make files smaller, and render page previews. Every file it checks is a normal Filecheck job on your account, so it shows up in your dashboard like any other.
+- **Set up your products:** build workflows, upload rules and preflight profiles for a product, try them on a real file, and make your Shopify products open them. See [Set up products with AI](/mcp/set-up-products).
+- **Delivery and webhooks:** send finished files to SFTP and FTP hotfolders, S3, email or a webhook, with a test delivery first, and set up webhooks for job and proof events. See [Set up delivery with AI](/mcp/delivery).
+- **Storefront:** change how the Filecheck upload box appears on your product pages.
+- **Jobs:** find past jobs, read their full preflight reports, and download the fixed files.
 
 New workflows, rules and profiles are saved as drafts, so the agent can try them on a real file before anything goes live. Agents are told to ask you before they publish a draft, map a product or change your storefront settings, because those show on your store at once. Every tool that changes your account is also marked as such, so ChatGPT, Claude and other clients ask you before it runs.
 
-## Get started
+## Before you start
 
-<Steps>
-  <Step title="Copy your secret key">
-    Open the [Dev Hub](https://admin.filecheck.io/devhub) in your Filecheck dashboard, under **API keys**, and copy a secret key (`sk_…`). Create one per AI tool and label it, so you can revoke one without the others. The key goes in your AI tool's settings or on the Filecheck sign-in page; the model never sees it.
-  </Step>
-  <Step title="Add Filecheck to your AI tool">
-    Pick your tool [below](#add-filecheck-to-your-ai-tool). ChatGPT and Claude connect to the hosted server and sign in; coding tools run the server locally with `npx`, which needs [Node.js](https://nodejs.org) 18 or later.
-  </Step>
-  <Step title="Ask for something">
-    Try one of the [example requests](#example-requests).
-  </Step>
-</Steps>
+Open the [Dev Hub](https://admin.filecheck.io/devhub) in your Filecheck dashboard, under **API keys**, and copy a secret key (`sk_…`). Create one per AI tool and label it, so you can revoke one without the others. The key goes in your AI tool's settings or on the Filecheck sign-in page; the model never sees it.
 
 <Warning>
   The secret key grants full API access to your account. Keep it in your MCP client's local settings or a server-side environment variable, never in a repository or a browser. You can revoke it in the Dev Hub at any time.
 </Warning>
 
-### Let your agent set it up
+Chat apps connect to the hosted server and sign in: you paste a secret key once, on a Filecheck page, and the app gets its own access from then on. Coding tools can run the server locally with `npx`, which needs [Node.js](https://nodejs.org) 18 or later; the local server reads files straight from your disk and saves the fixed copy next to them. Either way, file bytes go to Filecheck over a presigned upload, never through the model's context.
 
-Paste this into Claude Code, Codex, Cursor or any agent that can edit its own settings. It asks for your key and connects itself.
+## ChatGPT
 
-```text
-Follow https://filecheck.io/docs/integrations/mcp and connect the Filecheck MCP server to this agent.
-Ask me for my Filecheck secret key, keep it out of any file I commit, and tell me what you changed.
-```
-
-## Add Filecheck to your AI tool
-
-Chat apps connect to the hosted server at `https://api.filecheck.io/mcp` and sign in: you paste a secret key once, on a Filecheck page, and the app gets its own access from then on. Coding tools run the local server, which reads files straight from your disk and saves the fixed copy next to them. Either way, file bytes go to Filecheck over a presigned upload, never through the model's context.
-
-### ChatGPT
-
-1. In ChatGPT, open **Settings → Apps & Connectors → Advanced** and turn on **Developer mode**.
-2. Back in **Apps & Connectors**, create a connector. Name it Filecheck, set the URL to `https://api.filecheck.io/mcp` and choose **OAuth** authentication.
-3. ChatGPT opens a Filecheck page. Paste a secret key and click **Allow access**.
-
-Ask "Which workflows does my Filecheck account have?" to check that it works.
+1. **Add the server:** turn on developer mode and add a custom MCP server ([OpenAI's guide](https://help.openai.com/en/articles/12584461-developer-mode-and-mcp-apps-in-chatgpt) shows where, for your plan). Name it Filecheck, use the URL `https://api.filecheck.io/mcp` and choose **OAuth** authentication.
+2. **Connect:** ChatGPT opens a Filecheck page. Paste your secret key and click **Allow access**.
+3. **Test:** ask *"Which workflows does my Filecheck account have?"*
 
 ChatGPT can't hand a file attached to the chat to Filecheck. Give it a link to the file instead: any public URL that downloads it, such as a shared Dropbox or Google Drive link.
 
-### Claude
+<Note>
+  ChatGPT keeps the list of tools it saw when you added the server. When Filecheck adds new tools, open the connection in ChatGPT's settings, click **Refresh**, and start a new chat. On a Business or Enterprise workspace, an admin may need to refresh it.
+</Note>
 
-On claude.ai, open **Settings → Connectors** and click **Add custom connector**. Name it Filecheck, set the URL to `https://api.filecheck.io/mcp` and click **Add**, then **Connect**. Claude opens a Filecheck page: paste a secret key and click **Allow access**. The connector then works in Claude on the web, desktop and mobile.
+## Claude
 
-### Claude Desktop
+1. **Add the connector:** on claude.ai, open **Settings → Connectors** and click **Add custom connector**. Name it Filecheck and use the URL `https://api.filecheck.io/mcp`.
+2. **Connect:** click **Connect**. Claude opens a Filecheck page: paste your secret key and click **Allow access**.
+3. **Test:** ask *"Which workflows does my Filecheck account have?"*
+
+The connector then works in Claude on the web, desktop and mobile. If your organization only allows connectors an admin has approved, ask them to add it.
+
+## Claude Desktop
 
 To let Claude Desktop read and save files on your computer, run the local server instead of the connector. Open **Settings → Developer → Edit Config** and add Filecheck to `claude_desktop_config.json`, then restart Claude Desktop:
 
@@ -72,7 +69,7 @@ To let Claude Desktop read and save files on your computer, run the local server
 }
 ```
 
-### Claude Code
+## Claude Code
 
 Run in your terminal:
 
@@ -82,7 +79,9 @@ claude mcp add filecheck \
   -- npx -y filecheck-mcp
 ```
 
-### Cursor
+Or connect to the hosted server and sign in: run `claude mcp add --transport http filecheck https://api.filecheck.io/mcp`, then `/mcp` in Claude Code, pick filecheck and choose **Authenticate**. Your browser opens the Filecheck page.
+
+## Cursor
 
 Add to `~/.cursor/mcp.json`:
 
@@ -98,7 +97,7 @@ Add to `~/.cursor/mcp.json`:
 }
 ```
 
-### VS Code
+## VS Code
 
 Add to `.vscode/mcp.json`. VS Code asks for the key when the server starts, so it is never written to the file:
 
@@ -123,7 +122,7 @@ Add to `.vscode/mcp.json`. VS Code asks for the key when the server starts, so i
 }
 ```
 
-### Codex
+## Codex
 
 Add to `~/.codex/config.toml`:
 
@@ -134,7 +133,7 @@ args = ["-y", "filecheck-mcp"]
 env = { FILECHECK_API_KEY = "sk_…" }
 ```
 
-### Any MCP client (hosted server)
+## Any MCP client (hosted server)
 
 If your client cannot run `npx`, or you are building your own agent, connect to the hosted server over Streamable HTTP. Clients that support MCP sign-in (OAuth) find the Filecheck sign-in page on their own, as ChatGPT and Claude do. Anything else sends the key as a Bearer header:
 
@@ -150,8 +149,6 @@ claude mcp add --transport http filecheck https://api.filecheck.io/mcp \
   --header "Authorization: Bearer sk_…"
 ```
 
-Or leave the header out and sign in instead: run `/mcp` in Claude Code, pick filecheck and choose **Authenticate**. Your browser opens the Filecheck page.
-
 The hosted server has the same tools, minus local files: sources are links or files uploaded earlier, and `save_artifact` is not available. Long jobs return `pending: true` after about 20 seconds; the agent then polls with `get_job`.
 
 <Note>
@@ -164,7 +161,7 @@ The hosted server has the same tools, minus local files: sources are links or fi
 - "Validate every PDF in ./invoices for PDF/A and list the ones that fail, with the reason."
 - "Which jobs failed this week, and what was wrong with them?"
 - "Set up business cards at 85 × 55 mm with 3 mm bleed as a draft workflow, and try it on business-card.pdf."
-- "Map the Premium Business Cards product in my Shopify store to that workflow."
+- "Make the Premium Business Cards product in my Shopify store open that workflow."
 - "Send finished files to our SFTP hotfolder and test the delivery."
 
 ## Tools
@@ -194,9 +191,9 @@ The hosted server has the same tools, minus local files: sources are links or fi
 | `list_destinations` | Where finished files are delivered: SFTP and FTP hotfolders, S3, webhooks, email |
 | `manage_destination` | Create, update or delete a delivery destination; passwords and keys are write-only |
 | `test_destination` | Deliver a sample order through a destination and report whether it arrived |
-| `list_product_maps` | Which products in your store open which workflow |
-| `find_store_products` | Read products from your connected Shopify store (other carts: give the product id) |
-| `map_product` | Make a product open a published workflow, or stop it |
+| `list_product_maps` | Which products in your Shopify store open which workflow |
+| `find_store_products` | Read products from your connected Shopify store |
+| `map_product` | Make a Shopify product open a published workflow, or stop it |
 | `get_settings` | How the Filecheck Element appears on your product pages |
 | `update_settings` | Change those storefront settings |
 | `list_webhooks` | Your webhook endpoints and the events they can subscribe to |
@@ -204,6 +201,8 @@ The hosted server has the same tools, minus local files: sources are links or fi
 | `test_webhook` | Send a signed test event and report the receiver's answer |
 
 Every create and update can run as a dry run first: the record is checked and shown as it would be saved, and nothing changes. When the API refuses a record, the agent gets the field at fault and every problem, and fixes them before trying again. Drafts that are never published are deleted after 30 days.
+
+On WooCommerce, PrestaShop and OpenCart, a product's workflow is chosen in the Filecheck plugin's product settings, so the agent builds the workflow and you pick it there.
 
 ## Reading results
 

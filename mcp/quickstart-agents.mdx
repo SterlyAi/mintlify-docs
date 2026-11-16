@@ -1,0 +1,75 @@
+---
+title: "Quickstart for agents"
+description: "Hand this page to your AI agent. It connects the Filecheck MCP server to the tool it runs in, so it can check print files and set up your Filecheck account."
+---
+
+<Note>
+  For agents: the full documentation index is at [https://filecheck.io/docs/llms.txt](https://filecheck.io/docs/llms.txt). Fetch it to find any other page.
+</Note>
+
+This page is written for AI agents. Give it to Claude Code, Codex, Cursor, VS Code or any agent that can run commands and edit its own settings, and it connects Filecheck for you. For ChatGPT and Claude, the agent tells you the two clicks to make yourself. Prefer to do it by hand? See [MCP server](/mcp/server).
+
+## Give your agent this prompt
+
+```text
+Follow https://filecheck.io/docs/mcp/quickstart-agents and connect the Filecheck MCP server to this agent.
+Keep my secret key out of any file I commit, and tell me what you changed.
+```
+
+## Steps for the agent
+
+1. **Get a secret key.** Ask the user for a Filecheck secret key (`sk_…`). If they have none, they create one in the dashboard under [Dev Hub → API keys](https://admin.filecheck.io/devhub), labelled for you. Never repeat the key back in chat. A publishable key (`pk_…`) does not work: it is for the storefront only.
+2. **Add the server** for the tool you run in, at user level, never in a project file that gets committed. Coding tools run the local server, which can read and save files on the user's disk:
+
+    | Tool | What to do |
+    | --- | --- |
+    | Claude Code | `claude mcp add --scope user filecheck -e FILECHECK_API_KEY=<key> -- npx -y filecheck-mcp` |
+    | Codex | Add `[mcp_servers.filecheck]` with `command = "npx"`, `args = ["-y", "filecheck-mcp"]` and `env = { FILECHECK_API_KEY = "<key>" }` to `~/.codex/config.toml`. |
+    | Cursor | Add `"filecheck": { "command": "npx", "args": ["-y", "filecheck-mcp"], "env": { "FILECHECK_API_KEY": "<key>" } }` under `mcpServers` in `~/.cursor/mcp.json`. |
+    | VS Code | Add the server with a `promptString` input (`password: true`) to `.vscode/mcp.json`, as in [MCP server → VS Code](/mcp/server#vs-code); VS Code asks the user for the key. |
+    | Claude Desktop | Add the same `npx` entry under `mcpServers` in `claude_desktop_config.json` ([MCP server → Claude Desktop](/mcp/server#claude-desktop)), then ask the user to restart Claude Desktop. |
+    | Claude | You can't add it yourself. Tell the user to add a custom connector with the URL `https://api.filecheck.io/mcp`, then paste their key on the Filecheck page that opens. Steps: [MCP server](/mcp/server#claude). |
+    | ChatGPT | You can't add it yourself. Tell the user to add a custom MCP server with the URL `https://api.filecheck.io/mcp` (OAuth), then paste their key on the Filecheck page that opens. Steps: [MCP server](/mcp/server#chatgpt). |
+    | Anything else | A remote MCP server over Streamable HTTP at `https://api.filecheck.io/mcp`, with the header `Authorization: Bearer <key>`. |
+
+    The local server needs Node.js 18 or later (`node --version`).
+3. **Load it.** Reload or restart the MCP servers if your tool needs it (Claude Code: start a new session; Cursor: refresh in MCP settings; VS Code: **MCP: List Servers**, then start `filecheck`).
+4. **Check it.** Call `list_catalog` with `type: "workflows"` and show the user the workflows it returns.
+5. **Report.** Tell the user which file or setting you changed, and that revoking the key in the Dev Hub disconnects you.
+
+## Rules for the agent
+
+- Keep the key out of project files, scripts and commits. User-level settings or environment variables only.
+- A secret key can change anything in the account the API can. Use one key per agent.
+- Read both axes of every job: `status` says whether the check ran, `outcome` is the verdict. `status: done` with `outcome: fail` means the file is **not** print-ready.
+- If a tool returns `pending: true`, poll `get_job` with the job id. Never submit the same file again.
+- Download links expire after about an hour. Call `get_job` for fresh ones instead of storing them.
+- New workflows, rules and profiles stay drafts until published. Ask the user before you publish one, map a product, change storefront settings, or run `test_destination` (it writes a real file into the shop's hotfolder).
+- Read a record's schema with `setup_reference` before you create or patch it. Use `dryRun: true` when unsure. When the API refuses a record, the error names the field and lists every problem: fix them all, then retry.
+
+## What you can do next
+
+- Check a file for print: `check_file` with a preflight profile from `list_catalog`, then explain the verdict and each finding. Pass `context` (the ordered size, page count, bleed) when the user tells you what they ordered.
+- Fix what can be fixed with `fix_file`, then give the user the download link, or save it next to the original with `save_artifact` (local server).
+- Validate PDF/A or PDF/UA with `validate_pdf`; make a file smaller with `optimize_file` and settings from an optimize preset.
+- Explain why a past job failed: `list_jobs`, `get_job`, then `get_report` for the full report.
+- Set up a product, if the user asks: follow [Set up products with AI](/mcp/set-up-products). Build a draft profile, rule and workflow with `manage_catalog`, try it on a real file with `check_file` and its `workflowId`, then publish it and `map_product` (Shopify) when the user agrees.
+- Set up delivery: follow [Set up delivery with AI](/mcp/delivery). `manage_destination`, then `test_destination` once the user agrees, then add the destination to the workflow's delivery.
+- Fix how the upload box appears on product pages with `get_settings` and `update_settings`.
+
+## Go deeper
+
+<CardGroup cols={2}>
+  <Card title="MCP server" icon="plug" href="/mcp/server">
+    Connect by hand, client by client, and every tool.
+  </Card>
+  <Card title="Set up products with AI" icon="wand-magic-sparkles" href="/mcp/set-up-products">
+    Workflows, rules and profiles, as drafts first.
+  </Card>
+  <Card title="Verify jobs" icon="circle-check" href="/server/verify-jobs">
+    The two-axis result model.
+  </Card>
+  <Card title="REST API" icon="code" href="/api-reference/introduction">
+    The same features for your own code.
+  </Card>
+</CardGroup>

@@ -1,0 +1,73 @@
+---
+title: "Set up products with AI"
+description: "Let your AI assistant build the workflow, upload rule and preflight profile for a product as drafts, try them on a real file, and make the product open them once you agree."
+---
+
+Every product that takes customer files needs three things in Filecheck: a [preflight profile](/configuration/preflight) that says what a good file is (size, bleed, resolution, colour, fonts), an [upload rule](/configuration/upload-rules) that says which files the product accepts and which profile checks each kind, and a [workflow](/configuration/workflows) that ties them together with proofing and delivery. Setting them up by hand means knowing every field.
+
+Connected to the [Filecheck MCP server](/mcp/server), your AI assistant does that for you. It reads what your account has, builds what is missing as drafts, tries them on a real file, and makes the product open the workflow once you agree.
+
+## Ask for it
+
+Tell it the product and what a good file is:
+
+```text
+Set up business cards at 85 x 55 mm with 3 mm bleed and 300 dpi images.
+Customers upload one PDF or JPG per side. Try it on business-card.pdf before anything goes live.
+```
+
+More examples:
+
+- *"Our A5 flyers need 3 mm bleed and CMYK. Copy the built-in flyer workflow and change only that."*
+- *"Banners come in any size the customer picks on the product page. Check the file against the size they chose."*
+- *"Why does the Postcards workflow reject this file? https://example.com/postcard.pdf"*
+- *"Make the Premium Business Cards product in my Shopify store open the new workflow."*
+
+## What the assistant does
+
+<Steps>
+  <Step title="Reads what you have">
+    It lists your workflows, rules and profiles, yours and the built-in ones, and the products in your Shopify store with the workflow each opens. A built-in record that fits is the best start: changing it saves your own copy under the same id, which you can revert later.
+  </Step>
+  <Step title="Builds drafts, bottom up">
+    It reads each record's schema, then saves a preflight profile, an upload rule whose accept entries name that profile, and a workflow whose intake points at the rule. All three are drafts: hidden from your storefront and dashboard lists, and nothing a customer sees changes.
+  </Step>
+  <Step title="Tries them on a real file">
+    It runs your file through the draft workflow, exactly as the storefront would, and shows you the verdict and each finding. It adjusts the drafts until the result is what you expect.
+  </Step>
+  <Step title="Publishes and maps, when you agree">
+    It asks before anything goes live. Publishing the workflow publishes the drafts it points at too. Then it makes the product open the workflow, for every variant or one workflow per variant (for example per size).
+  </Step>
+</Steps>
+
+Then open the product page and upload a file once yourself.
+
+<Note>
+  Mapping products is for Shopify stores. On WooCommerce, PrestaShop and OpenCart, choose the workflow in the Filecheck plugin's product settings: the assistant builds and publishes it, and tells you its name.
+</Note>
+
+## What keeps it safe
+
+- **Drafts first.** New records stay drafts until published, and a published record can never point at a draft. Drafts that are never published are deleted after 30 days.
+- **Dry runs.** Any create or change can be checked without saving: the assistant sees the record as it would be saved.
+- **Checked by the API.** When a record is refused, the error names the field at fault and lists every problem, so the assistant fixes them all before trying again.
+- **Asked first.** Publishing, mapping a product and changing storefront settings show on your store at once. The assistant asks you first, and your AI tool asks you to confirm every tool that changes your account.
+- **Undo for built-ins.** Changing a built-in profile, rule or workflow saves your copy; reverting drops it, and the built-in version applies again. Records still in use by a published workflow or product can't be deleted.
+
+## Sizes from the product page
+
+When customers choose the size, page count or finish on the product page, a [connector](/configuration/connectors) passes their choice to Filecheck, so the rule checks the file against the size they ordered. Ask for it, for example: *"The banner page has width and height fields in cm: check uploads against what the customer entered."* The assistant reads the connector schema and builds one as a draft like the rest. You then choose it for the product in the Filecheck plugin or app's product settings, where each product keeps its connector. A connector never accepts, rejects or prices anything itself: the rule decides, and your store stays in charge of the price.
+
+## When the upload box doesn't show
+
+The same assistant can change how the Filecheck upload box appears on your product pages: inline or behind an **Upload Files** button, where it goes, the add-to-cart button it keeps disabled until the files are accepted, its colour theme, and whether the proof replaces the product gallery. Ask it, for example:
+
+- *"The upload box doesn't show on my product pages. It should go under the variant picker, in the element .product-form__input."*
+- *"Customers can add to cart before uploading. Our theme's button is button.add-to-cart-custom."*
+- *"Show the upload as a button that opens a popup, placed before the quantity field."*
+
+Changes show on your product pages at once, so it asks first. Custom JavaScript and CSS stay in the dashboard.
+
+## For developers
+
+The same features are in the [REST API](/api-reference/introduction): [create a workflow](/api-reference/workflows/create-a-workflow) as a draft, [publish it](/api-reference/workflows/publish-a-draft-workflow), [map a product](/api-reference/products/map-a-product-to-a-workflow) and [update the storefront settings](/api-reference/settings/update-the-storefront-settings). The tools are listed on the [MCP server](/mcp/server#tools) page.
