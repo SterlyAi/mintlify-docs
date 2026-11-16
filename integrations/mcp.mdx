@@ -1,75 +1,181 @@
 ---
 title: "MCP server"
 sidebarTitle: "MCP"
-description: "Connect Claude, Cursor, or any MCP client to Filecheck — check, fix, validate, and optimize print files from an AI agent."
+description: "Connect Claude, Cursor, Codex or any MCP client to Filecheck, then ask it to check, fix and validate print files."
 ---
 
-`filecheck-mcp` is a [Model Context Protocol](https://modelcontextprotocol.io) server for the Filecheck API. Once connected, an AI agent can preflight a customer file, apply automatic fixes, validate PDF/A conformance, render page previews, and browse your profiles and rules — with your account's tenancy and billing applied throughout.
+`filecheck-mcp` is a [Model Context Protocol](https://modelcontextprotocol.io) server for the Filecheck API. Once it is connected, an AI agent can preflight a file, fix bleed, colour and fonts, validate PDF/A and PDF/UA, render page previews, and read your profiles, rules and workflows. Every file it checks is a normal Filecheck job on your account, so it shows up in your dashboard like any other.
 
-There are two ways to run it. Both use the same tools and the same secret key.
+The server can check and fix files. It cannot create or change your profiles, rules or workflows.
+
+## Get started
+
+<Steps>
+  <Step title="Copy your secret key">
+    Open the [Dev Hub](https://admin.filecheck.io/devhub) in your Filecheck dashboard and copy your secret key (`sk_…`). It goes in your AI tool's settings; the model never sees it.
+  </Step>
+  <Step title="Add Filecheck to your AI tool">
+    Pick your tool [below](#add-filecheck-to-your-ai-tool). Most run the server locally with `npx`, which needs [Node.js](https://nodejs.org) 18 or later.
+  </Step>
+  <Step title="Ask for something">
+    Try one of the [example requests](#example-requests).
+  </Step>
+</Steps>
 
 <Warning>
-  The secret key (`sk_…`) grants full API access to your account. Keep it in your MCP client's local config or server-side environment — never in a repository or a browser.
+  The secret key grants full API access to your account. Keep it in your MCP client's local settings or a server-side environment variable, never in a repository or a browser. You can revoke it in the Dev Hub at any time.
 </Warning>
 
-## Local server (recommended)
+### Let your agent set it up
 
-The local server runs on your machine via `npx`, so it can upload files straight from disk — file bytes go to Filecheck over a presigned upload, never through the model's context.
+Paste this into Claude Code, Codex, Cursor or any agent that can edit its own settings. It asks for your key and connects itself.
 
-```bash
-claude mcp add filecheck -e FILECHECK_API_KEY=sk_... -- npx -y filecheck-mcp
+```text
+Follow https://filecheck.io/docs/integrations/mcp and connect the Filecheck MCP server to this agent.
+Ask me for my Filecheck secret key, keep it out of any file I commit, and tell me what you changed.
 ```
 
-For Claude Desktop or Cursor, add it to the MCP configuration file:
+## Add Filecheck to your AI tool
 
-```json
+The local server runs on your machine, so it can read files straight from your disk and save the fixed copy next to them. File bytes go to Filecheck over a presigned upload, never through the model's context.
+
+### Claude Desktop
+
+Open **Settings → Developer → Edit Config** and add Filecheck to `claude_desktop_config.json`, then restart Claude Desktop:
+
+```json claude_desktop_config.json
 {
   "mcpServers": {
     "filecheck": {
       "command": "npx",
       "args": ["-y", "filecheck-mcp"],
-      "env": { "FILECHECK_API_KEY": "sk_..." }
+      "env": { "FILECHECK_API_KEY": "sk_…" }
     }
   }
 }
 ```
 
-## Remote server
+### Claude Code
 
-If installing packages is not an option, connect to the hosted endpoint instead. It exposes the same tools minus local-file access — sources are URLs or previously uploaded `fileRef`s.
+Run in your terminal:
+
+```bash
+claude mcp add filecheck \
+  -e FILECHECK_API_KEY=sk_… \
+  -- npx -y filecheck-mcp
+```
+
+### Cursor
+
+Add to `~/.cursor/mcp.json`:
+
+```json ~/.cursor/mcp.json
+{
+  "mcpServers": {
+    "filecheck": {
+      "command": "npx",
+      "args": ["-y", "filecheck-mcp"],
+      "env": { "FILECHECK_API_KEY": "sk_…" }
+    }
+  }
+}
+```
+
+### VS Code
+
+Add to `.vscode/mcp.json`. VS Code asks for the key when the server starts, so it is never written to the file:
+
+```json .vscode/mcp.json
+{
+  "inputs": [{
+    "type": "promptString",
+    "id": "filecheck-key",
+    "description": "Filecheck secret key",
+    "password": true
+  }],
+  "servers": {
+    "filecheck": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "filecheck-mcp"],
+      "env": {
+        "FILECHECK_API_KEY": "${input:filecheck-key}"
+      }
+    }
+  }
+}
+```
+
+### Codex
+
+Add to `~/.codex/config.toml`:
+
+```toml ~/.codex/config.toml
+[mcp_servers.filecheck]
+command = "npx"
+args = ["-y", "filecheck-mcp"]
+env = { FILECHECK_API_KEY = "sk_…" }
+```
+
+### Any MCP client (hosted server)
+
+If your client cannot run `npx`, or you are building your own agent, connect to the hosted server over Streamable HTTP and send the key as a Bearer header:
+
+| | |
+| --- | --- |
+| URL | `https://api.filecheck.io/mcp` |
+| Header | `Authorization: Bearer sk_…` |
+
+For example, in Claude Code:
 
 ```bash
 claude mcp add --transport http filecheck https://api.filecheck.io/mcp \
-  --header "Authorization: Bearer sk_..."
+  --header "Authorization: Bearer sk_…"
 ```
+
+The hosted server has the same tools, minus local files: sources are links or files uploaded earlier, and `save_artifact` is not available. Long jobs return `pending: true` after about 20 seconds; the agent then polls with `get_job`.
+
+<Note>
+  Chat apps that connect only through a sign-in flow (OAuth), such as ChatGPT's connectors and custom connectors on claude.ai, cannot connect yet: the server accepts a secret key only.
+</Note>
+
+## Example requests
+
+- "Check business-card.pdf for print. Fix what you can and save the print-ready copy next to it."
+- "Validate every PDF in ./invoices for PDF/A and list the ones that fail, with the reason."
+- "Which jobs failed this week, and what was wrong with them?"
 
 ## Tools
 
 | Tool | What it does |
 | --- | --- |
-| `check_file` | Preflight a file against a profile; returns verdict, findings, and a recommended autofix |
-| `fix_file` | Preflight, apply safe automatic fixes, re-check; returns the fixed file |
+| `check_file` | Preflight a file against a profile; returns the verdict, the findings and a recommended fix |
+| `fix_file` | Preflight, apply safe automatic fixes, check again; returns the fixed file |
 | `validate_pdf` | PDF/A and PDF/UA conformance via veraPDF |
-| `optimize_file` | Downsample, recompress, and slim a PDF or image |
+| `optimize_file` | Downsample, recompress and slim a PDF or image |
 | `render_previews` | Render page preview images, so the agent can look at a file |
-| `get_job` | Poll a job and re-mint fresh download URLs |
-| `list_jobs` | Recent jobs as lean envelopes |
-| `delete_job` | Soft-delete a job and its artifacts |
-| `list_catalog` | Browse profiles, rules, workflows, connectors, and optimize presets |
 | `get_report` | Drill into the full preflight report, section by section |
-| `save_artifact` | Save a deliverable to a local path (local server only) |
+| `list_catalog` | Browse your profiles, rules, workflows, connectors and optimize presets |
+| `list_jobs` | Recent jobs as lean envelopes, filterable by order |
+| `get_job` | Poll a job and get fresh download URLs |
+| `delete_job` | Soft-delete a job and its files |
+| `save_artifact` | Save a fixed file to a local path (local server only) |
 
 ## Reading results
 
 Every job carries two independent fields, and agents are instructed to read both:
 
-- **`status`** — did the check *run*: `pending`, `running`, `done`, `skipped`, or `error`.
-- **`outcome`** — the *verdict*: `pass`, `warn`, `fail`, `fixed`, `unchanged`, `na`, or `mixed`.
+- **`status`**: did the check *run*: `pending`, `running`, `done`, `skipped` or `error`.
+- **`outcome`**: the *verdict*: `pass`, `warn`, `fail`, `fixed`, `unchanged`, `na` or `mixed`.
 
 `status: done` with `outcome: fail` means the check completed and the file is **not** print-ready. The same [two-axis model](/server/verify-jobs) applies across the whole API.
 
 <Note>
-  Download URLs are presigned and expire after about 60 minutes. `get_job` returns freshly signed URLs on every call, so agents re-fetch instead of storing links. Long-running jobs return `pending: true` with polling guidance rather than blocking.
+  Download URLs are presigned and expire after about 60 minutes. `get_job` returns freshly signed URLs on every call, so agents fetch them again instead of storing links.
 </Note>
 
-The package is MIT licensed and developed at [github.com/PrintApp/filecheck-integrations](https://github.com/PrintApp/filecheck-integrations).
+## Pricing
+
+The server is free and open source (MIT). Files an agent checks are normal Filecheck jobs on your account, billed like any other job. See [pricing](https://filecheck.io/pricing).
+
+The package is on [npm](https://www.npmjs.com/package/filecheck-mcp) and developed at [github.com/PrintApp/filecheck-integrations](https://github.com/PrintApp/filecheck-integrations).
