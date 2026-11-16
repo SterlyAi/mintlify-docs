@@ -9,7 +9,7 @@ description: "Connect ChatGPT, Claude, Cursor, Codex or any MCP client to Filech
 - **Check files:** preflight a PDF or image, fix bleed, colour and fonts, validate PDF/A and PDF/UA, and render page previews. Every file it checks is a normal Filecheck job on your account, so it shows up in your dashboard like any other.
 - **Set up your products:** build workflows, upload rules and preflight profiles for a product, map products in your store to a workflow, and set up where finished files go and which webhooks fire.
 
-New workflows, rules and profiles are saved as drafts, so the agent can try them on a real file before anything goes live. Agents are told to ask you before they publish a draft, map a product or change your storefront settings, because those show on your store at once.
+New workflows, rules and profiles are saved as drafts, so the agent can try them on a real file before anything goes live. Agents are told to ask you before they publish a draft, map a product or change your storefront settings, because those show on your store at once. Every tool that changes your account is also marked as such, so ChatGPT, Claude and other clients ask you before it runs.
 
 ## Get started
 
@@ -49,6 +49,8 @@ Chat apps connect to the hosted server at `https://api.filecheck.io/mcp` and sig
 3. ChatGPT opens a Filecheck page. Paste a secret key and click **Allow access**.
 
 Ask "Which workflows does my Filecheck account have?" to check that it works.
+
+ChatGPT can't hand a file attached to the chat to Filecheck. Give it a link to the file instead: any public URL that downloads it, such as a shared Dropbox or Google Drive link.
 
 ### Claude
 
@@ -148,6 +150,8 @@ claude mcp add --transport http filecheck https://api.filecheck.io/mcp \
   --header "Authorization: Bearer sk_…"
 ```
 
+Or leave the header out and sign in instead: run `/mcp` in Claude Code, pick filecheck and choose **Authenticate**. Your browser opens the Filecheck page.
+
 The hosted server has the same tools, minus local files: sources are links or files uploaded earlier, and `save_artifact` is not available. Long jobs return `pending: true` after about 20 seconds; the agent then polls with `get_job`.
 
 <Note>
@@ -169,7 +173,7 @@ The hosted server has the same tools, minus local files: sources are links or fi
 
 | Tool | What it does |
 | --- | --- |
-| `check_file` | Preflight a file against a profile, rule or workflow; returns the verdict, the findings and a recommended fix |
+| `check_file` | Preflight a file against a profile, rule or workflow (drafts included, to try one before it goes live); returns the verdict, the findings and a recommended fix |
 | `fix_file` | Preflight, apply safe automatic fixes, check again; returns the fixed file |
 | `validate_pdf` | PDF/A and PDF/UA conformance via veraPDF |
 | `optimize_file` | Downsample, recompress and slim a PDF or image |
@@ -184,7 +188,7 @@ The hosted server has the same tools, minus local files: sources are links or fi
 
 | Tool | What it does |
 | --- | --- |
-| `list_catalog` | Browse your workflows, rules, preflight profiles, connectors and optimize presets |
+| `list_catalog` | Browse your workflows, rules, preflight profiles, connectors and optimize presets, with your drafts if asked |
 | `setup_reference` | Read the schema of a setup record (every field and its allowed values) before changing it |
 | `manage_catalog` | Create, update, delete, publish or revert a workflow, rule, profile, connector or optimize preset; new records are drafts until published |
 | `list_destinations` | Where finished files are delivered: SFTP and FTP hotfolders, S3, webhooks, email |
@@ -198,6 +202,8 @@ The hosted server has the same tools, minus local files: sources are links or fi
 | `list_webhooks` | Your webhook endpoints and the events they can subscribe to |
 | `manage_webhook` | Create, update or delete a webhook endpoint |
 | `test_webhook` | Send a signed test event and report the receiver's answer |
+
+Every create and update can run as a dry run first: the record is checked and shown as it would be saved, and nothing changes. When the API refuses a record, the agent gets the field at fault and every problem, and fixes them before trying again. Drafts that are never published are deleted after 30 days.
 
 ## Reading results
 
