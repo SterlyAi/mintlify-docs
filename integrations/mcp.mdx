@@ -1,21 +1,24 @@
 ---
 title: "MCP server"
 sidebarTitle: "MCP"
-description: "Connect Claude, Cursor, Codex or any MCP client to Filecheck, then ask it to check, fix and validate print files."
+description: "Connect ChatGPT, Claude, Cursor, Codex or any MCP client to Filecheck, then ask it to check and fix print files and set up your products."
 ---
 
-`filecheck-mcp` is a [Model Context Protocol](https://modelcontextprotocol.io) server for the Filecheck API. Once it is connected, an AI agent can preflight a file, fix bleed, colour and fonts, validate PDF/A and PDF/UA, render page previews, and read your profiles, rules and workflows. Every file it checks is a normal Filecheck job on your account, so it shows up in your dashboard like any other.
+`filecheck-mcp` is a [Model Context Protocol](https://modelcontextprotocol.io) server for the Filecheck API. Once it is connected, an AI agent can:
 
-The server can check and fix files. It cannot create or change your profiles, rules or workflows.
+- **Check files:** preflight a PDF or image, fix bleed, colour and fonts, validate PDF/A and PDF/UA, and render page previews. Every file it checks is a normal Filecheck job on your account, so it shows up in your dashboard like any other.
+- **Set up your products:** build workflows, upload rules and preflight profiles for a product, map products in your store to a workflow, and set up where finished files go and which webhooks fire.
+
+New workflows, rules and profiles are saved as drafts, so the agent can try them on a real file before anything goes live. Agents are told to ask you before they publish a draft, map a product or change your storefront settings, because those show on your store at once.
 
 ## Get started
 
 <Steps>
   <Step title="Copy your secret key">
-    Open the [Dev Hub](https://admin.filecheck.io/devhub) in your Filecheck dashboard and copy your secret key (`sk_…`). It goes in your AI tool's settings; the model never sees it.
+    Open the [Dev Hub](https://admin.filecheck.io/devhub) in your Filecheck dashboard, under **API keys**, and copy a secret key (`sk_…`). Create one per AI tool and label it, so you can revoke one without the others. The key goes in your AI tool's settings or on the Filecheck sign-in page; the model never sees it.
   </Step>
   <Step title="Add Filecheck to your AI tool">
-    Pick your tool [below](#add-filecheck-to-your-ai-tool). Most run the server locally with `npx`, which needs [Node.js](https://nodejs.org) 18 or later.
+    Pick your tool [below](#add-filecheck-to-your-ai-tool). ChatGPT and Claude connect to the hosted server and sign in; coding tools run the server locally with `npx`, which needs [Node.js](https://nodejs.org) 18 or later.
   </Step>
   <Step title="Ask for something">
     Try one of the [example requests](#example-requests).
@@ -37,11 +40,23 @@ Ask me for my Filecheck secret key, keep it out of any file I commit, and tell m
 
 ## Add Filecheck to your AI tool
 
-The local server runs on your machine, so it can read files straight from your disk and save the fixed copy next to them. File bytes go to Filecheck over a presigned upload, never through the model's context.
+Chat apps connect to the hosted server at `https://api.filecheck.io/mcp` and sign in: you paste a secret key once, on a Filecheck page, and the app gets its own access from then on. Coding tools run the local server, which reads files straight from your disk and saves the fixed copy next to them. Either way, file bytes go to Filecheck over a presigned upload, never through the model's context.
+
+### ChatGPT
+
+1. In ChatGPT, open **Settings → Apps & Connectors → Advanced** and turn on **Developer mode**.
+2. Back in **Apps & Connectors**, create a connector. Name it Filecheck, set the URL to `https://api.filecheck.io/mcp` and choose **OAuth** authentication.
+3. ChatGPT opens a Filecheck page. Paste a secret key and click **Allow access**.
+
+Ask "Which workflows does my Filecheck account have?" to check that it works.
+
+### Claude
+
+On claude.ai, open **Settings → Connectors** and click **Add custom connector**. Name it Filecheck, set the URL to `https://api.filecheck.io/mcp` and click **Add**, then **Connect**. Claude opens a Filecheck page: paste a secret key and click **Allow access**. The connector then works in Claude on the web, desktop and mobile.
 
 ### Claude Desktop
 
-Open **Settings → Developer → Edit Config** and add Filecheck to `claude_desktop_config.json`, then restart Claude Desktop:
+To let Claude Desktop read and save files on your computer, run the local server instead of the connector. Open **Settings → Developer → Edit Config** and add Filecheck to `claude_desktop_config.json`, then restart Claude Desktop:
 
 ```json claude_desktop_config.json
 {
@@ -119,7 +134,7 @@ env = { FILECHECK_API_KEY = "sk_…" }
 
 ### Any MCP client (hosted server)
 
-If your client cannot run `npx`, or you are building your own agent, connect to the hosted server over Streamable HTTP and send the key as a Bearer header:
+If your client cannot run `npx`, or you are building your own agent, connect to the hosted server over Streamable HTTP. Clients that support MCP sign-in (OAuth) find the Filecheck sign-in page on their own, as ChatGPT and Claude do. Anything else sends the key as a Bearer header:
 
 | | |
 | --- | --- |
@@ -136,7 +151,7 @@ claude mcp add --transport http filecheck https://api.filecheck.io/mcp \
 The hosted server has the same tools, minus local files: sources are links or files uploaded earlier, and `save_artifact` is not available. Long jobs return `pending: true` after about 20 seconds; the agent then polls with `get_job`.
 
 <Note>
-  Chat apps that connect only through a sign-in flow (OAuth), such as ChatGPT's connectors and custom connectors on claude.ai, cannot connect yet: the server accepts a secret key only.
+  A signed-in app acts with the same access as the secret key you pasted. Revoking that key in the Dev Hub disconnects the app at its next request.
 </Note>
 
 ## Example requests
@@ -144,22 +159,45 @@ The hosted server has the same tools, minus local files: sources are links or fi
 - "Check business-card.pdf for print. Fix what you can and save the print-ready copy next to it."
 - "Validate every PDF in ./invoices for PDF/A and list the ones that fail, with the reason."
 - "Which jobs failed this week, and what was wrong with them?"
+- "Set up business cards at 85 × 55 mm with 3 mm bleed as a draft workflow, and try it on business-card.pdf."
+- "Map the Premium Business Cards product in my Shopify store to that workflow."
+- "Send finished files to our SFTP hotfolder and test the delivery."
 
 ## Tools
 
+### Check files
+
 | Tool | What it does |
 | --- | --- |
-| `check_file` | Preflight a file against a profile; returns the verdict, the findings and a recommended fix |
+| `check_file` | Preflight a file against a profile, rule or workflow; returns the verdict, the findings and a recommended fix |
 | `fix_file` | Preflight, apply safe automatic fixes, check again; returns the fixed file |
 | `validate_pdf` | PDF/A and PDF/UA conformance via veraPDF |
 | `optimize_file` | Downsample, recompress and slim a PDF or image |
 | `render_previews` | Render page preview images, so the agent can look at a file |
 | `get_report` | Drill into the full preflight report, section by section |
-| `list_catalog` | Browse your profiles, rules, workflows, connectors and optimize presets |
 | `list_jobs` | Recent jobs as lean envelopes, filterable by order |
 | `get_job` | Poll a job and get fresh download URLs |
 | `delete_job` | Soft-delete a job and its files |
 | `save_artifact` | Save a fixed file to a local path (local server only) |
+
+### Set up your account
+
+| Tool | What it does |
+| --- | --- |
+| `list_catalog` | Browse your workflows, rules, preflight profiles, connectors and optimize presets |
+| `setup_reference` | Read the schema of a setup record (every field and its allowed values) before changing it |
+| `manage_catalog` | Create, update, delete, publish or revert a workflow, rule, profile, connector or optimize preset; new records are drafts until published |
+| `list_destinations` | Where finished files are delivered: SFTP and FTP hotfolders, S3, webhooks, email |
+| `manage_destination` | Create, update or delete a delivery destination; passwords and keys are write-only |
+| `test_destination` | Deliver a sample order through a destination and report whether it arrived |
+| `list_product_maps` | Which products in your store open which workflow |
+| `find_store_products` | Read products from your connected Shopify store (other carts: give the product id) |
+| `map_product` | Make a product open a published workflow, or stop it |
+| `get_settings` | How the Filecheck Element appears on your product pages |
+| `update_settings` | Change those storefront settings |
+| `list_webhooks` | Your webhook endpoints and the events they can subscribe to |
+| `manage_webhook` | Create, update or delete a webhook endpoint |
+| `test_webhook` | Send a signed test event and report the receiver's answer |
 
 ## Reading results
 
