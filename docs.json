@@ -3,9 +3,15 @@
   "theme": "mint",
   "name": "Filecheck",
   "colors": {
-    "primary": "#F91B25",
-    "light": "#FA4951",
-    "dark": "#9D1217"
+    "primary": "#1F5BFF",
+    "light": "#6088FF",
+    "dark": "#1747CC"
+  },
+  "background": {
+    "color": {
+      "light": "#FFFFFF",
+      "dark": "#090B1A"
+    }
   },
   "favicon": "/favicon.svg",
   "redirects": [

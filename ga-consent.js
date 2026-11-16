@@ -45,15 +45,15 @@
 	var el = document.createElement('div');
 	el.id = 'fc-consent';
 	el.style.cssText = 'position:fixed;right:1rem;bottom:1rem;z-index:9999;width:300px;max-width:calc(100vw - 2rem);' +
-		'background:#17191d;border:1px solid #383c45;border-radius:10px;padding:14px 16px;' +
+		'background:#151A33;border:1px solid #2A3154;border-radius:10px;padding:14px 16px;' +
 		'opacity:0;transform:translateY(12px);transition:opacity .3s ease,transform .3s ease;' +
-		'font-size:12px;line-height:1.55;color:#c8ccd4;font-family:inherit;';
+		'font-size:12px;line-height:1.55;color:#C5CAE0;font-family:inherit;';
 	el.innerHTML =
 		'<p style="margin:0;">We use one analytics cookie to see what’s useful. No ads, no data sharing. ' +
-		'<a href="https://filecheck.io/company/privacy" style="color:#8b919c;text-decoration:underline;">Privacy policy</a></p>' +
+		'<a href="https://filecheck.io/company/privacy" style="color:#C5CAE0;text-decoration:underline;">Privacy policy</a></p>' +
 		'<div style="display:flex;gap:8px;margin-top:12px;">' +
-		'<button type="button" id="fc-consent-accept" style="flex:1;height:30px;font-size:12px;border-radius:6px;cursor:pointer;background:#f91b25;color:#fff;border:none;">Accept</button>' +
-		'<button type="button" id="fc-consent-decline" style="flex:1;height:30px;font-size:12px;border-radius:6px;cursor:pointer;background:transparent;color:#8b919c;border:1px solid #383c45;">No thanks</button>' +
+		'<button type="button" id="fc-consent-accept" style="flex:1;height:30px;font-size:12px;border-radius:6px;cursor:pointer;background:#1F5BFF;color:#fff;border:none;">Accept</button>' +
+		'<button type="button" id="fc-consent-decline" style="flex:1;height:30px;font-size:12px;border-radius:6px;cursor:pointer;background:transparent;color:#C5CAE0;border:1px solid #2A3154;">No thanks</button>' +
 		'</div>';
 
 	function choose(value) {
