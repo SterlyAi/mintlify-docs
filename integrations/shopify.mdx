@@ -57,6 +57,10 @@ Returns every job linked to that order, plus a `linked` flag. Jobs acquire their
 
 `linked` is only set to `true` after every job in the order has been linked, so a `true` response never carries a partial list. Order links are retained for 180 days.
 
+## Lines bought without a file
+
+With [artwork after checkout](/configuration/artwork-after-checkout), a product can be bought before its artwork exists. Its line item has no `_filecheck_job_id` at checkout. Filecheck records the line from `orders/create`, and the job created when the customer uploads on your upload page is linked to the order straight away, so `GET /jobs?orderId=` lists it once it exists. Until then, check for the line on [`GET /orders/{id}/upload-link`](/api-reference/orders/get-an-order-upload-link), which also returns the signed link to send the customer.
+
 ## Connector (optional)
 
 Store the connector JSON in a metafield (`filecheck.connector`) and pass it as the `connector` option to drive quantity and size inputs from [file facts](/element/connectors).

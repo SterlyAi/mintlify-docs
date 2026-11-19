@@ -42,6 +42,26 @@ description: "Install the Filecheck plugin, add your keys, and gate add-to-cart 
   **Optional: store-wide default workflow.** You can set a default **Workflow** that is applied to every product automatically. Leave this unset while you are testing. On a live store a default takes effect everywhere at once, so the upload Element would appear on all products immediately. Enable Filecheck per product first, and only set a default once you are confident how it behaves. See [Workflows](/concepts/workflows).
 </Note>
 
+## Artwork after checkout
+
+The plugin (version 1.0.7 or later) lets customers pay first and upload their artwork later, on your own upload page. See [Artwork after checkout](/configuration/artwork-after-checkout) for the whole feature.
+
+<Steps>
+  <Step title="Set up your upload page">
+    In Filecheck, go to **Settings → Artwork after checkout**, set an **Upload Page Address**, and add your logo and colours.
+  </Step>
+  <Step title="Choose when to collect artwork">
+    In the plugin's settings, set **When to Collect Artwork** for the whole store. To change one product, use **When to Collect Artwork** on its **Filecheck** tab. The plugin's setting decides both the product page and which order lines wait for artwork.
+  </Step>
+  <Step title="Check the link in your emails">
+    Keep **Upload Link in Order Emails** switched on. When an order still needs artwork, an **Upload your artwork** block with the link appears in WooCommerce's customer order emails, on the order received page and in **My Account**. It disappears once every item has artwork.
+  </Step>
+</Steps>
+
+<Note>
+  Lines are sent to Filecheck once the order is paid or on hold, so unpaid checkouts never get an upload page. The cart shows **Artwork: Upload after checkout** for these products.
+</Note>
+
 <Tip>
   Server-side, the plugin blocks add-to-cart when a required `jobId` is missing, and stores the job on the order. See the [WooCommerce integration reference](/integrations/woocommerce) for the hooks and the post-purchase file download.
 </Tip>

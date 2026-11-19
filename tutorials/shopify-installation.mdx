@@ -44,6 +44,24 @@ description: "Install the Filecheck app, map a workflow to a product, and gate a
   **Not seeing the upload form on a mapped product?** First check that the **Filecheck** app embed is on and saved in your **live** theme. Turning it on in an unpublished theme doesn't affect your storefront. With the embed on, Filecheck loads a script that finds the right spot on your product page and injects the upload form automatically, so in almost all cases you do **not** need to touch your theme. In rare cases (~0.5%) where a theme does not follow standard conventions — for example, no standard cart form — you may need to add the **Filecheck Intake** app block to your product template in the theme editor. If a mapped product still does not show the form, [contact us](mailto:support@filecheck.io) and we will check it for you or add the block to that product page.
 </Note>
 
+## Artwork after checkout
+
+Let customers pay first and upload their artwork later, on your own upload page. See [Artwork after checkout](/configuration/artwork-after-checkout) for the whole feature.
+
+<Steps>
+  <Step title="Set up your upload page">
+    In Filecheck, go to **Settings → Artwork after checkout**. Set an **Upload Page Address**, add your logo and colours, and choose the store default under **When To Collect Artwork**.
+  </Step>
+  <Step title="Choose products">
+    In **Workflows → Product Mappings**, click **Change** on a product and set **When to collect artwork**. A product set to **After checkout only** shows a short note instead of the upload form, and **Add to cart** works without a file.
+  </Step>
+  <Step title="Add the link to Shopify's order confirmation">
+    Back in **Settings → Artwork after checkout**, click **Copy link**. In Shopify, open **Settings → Notifications → Order confirmation**, click **Edit code** and paste the link where customers should see it. Shopify fills in each order number for you.
+  </Step>
+</Steps>
+
+Filecheck learns about each order from Shopify, so there is nothing else to connect. Orders still waiting for artwork are listed under **Orders → Awaiting artwork** in your Filecheck dashboard.
+
 ## Works with Print Options and Print.App
 
 Selling configurable print products? Filecheck works hand-in-hand with [Print Options + Artwork Upload](https://apps.shopify.com/print-product-options), the free options & price builder from [Print.App](https://print.app), and the [Print.App Editor](https://print.app). Print Options handles sizes, stocks, finishes and live pricing on the product page, and can pass customer uploads straight to Filecheck for validation and fixing. Each app also works standalone.

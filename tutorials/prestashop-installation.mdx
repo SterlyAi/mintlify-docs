@@ -34,6 +34,26 @@ description: "Install the Filecheck module and require validated uploads on prod
   **Optional: store-wide default workflow.** You can set a default **Workflow** that is applied to every product automatically. Leave this unset while you are testing. On a live store a default takes effect everywhere at once, so the upload Element would appear on all products immediately. Enable Filecheck per product first, and only set a default once you are confident how it behaves. See [Workflows](/concepts/workflows).
 </Note>
 
+## Artwork after checkout
+
+The module (version 1.1.0 or later) lets customers pay first and upload their artwork later, on your own upload page. See [Artwork after checkout](/configuration/artwork-after-checkout) for the whole feature.
+
+<Steps>
+  <Step title="Set up your upload page">
+    In Filecheck, go to **Settings → Artwork after checkout**, set an **Upload Page Address**, and add your logo and colours.
+  </Step>
+  <Step title="Choose when to collect artwork">
+    In the module configuration, set **When to Collect Artwork** for the whole store. To change one product, use **When to Collect Artwork** in the product's **Modules** tab. The module's setting decides both the product page and which order lines wait for artwork.
+  </Step>
+  <Step title="Choose how customers get the link">
+    With **Upload Link Email** on, customers get one **Upload your artwork** email through your store's mailer when they order. The link also shows on the order confirmation and order history pages. To add it to another email, put `{filecheck_upload_link}` in that template: it is filled in when the order still needs artwork, and left empty otherwise.
+  </Step>
+</Steps>
+
+<Note>
+  Orders with a failed payment, or that are cancelled or refunded, never get an upload page. The email template is `modules/filecheck/mails/en/filecheck_upload`. Shops in other languages use the English template unless you add one in `mails/<language code>/`.
+</Note>
+
 <Tip>
   OpenCart and PrestaShop share the same front-end snippet. See the [OpenCart &amp; PrestaShop reference](/integrations/opencart-prestashop).
 </Tip>

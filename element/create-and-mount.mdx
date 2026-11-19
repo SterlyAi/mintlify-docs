@@ -39,6 +39,9 @@ const intake = fc.elements.create('intake', {
 <ParamField path="presentation" type="'inline' | 'dialog'" default="inline">
   Render inline in the page flow, or behind a trigger button as a dialog.
 </ParamField>
+<ParamField path="artworkTiming" type="'checkout' | 'either' | 'after_order'" default="checkout">
+  When the product collects its artwork. With `'either'` the upload is optional; with `'after_order'` the Element shows a note instead of an upload box. Both report `status: 'idle'` with `canProceed: true` before any upload, so a gated **Add to cart** stays enabled, and the artwork is collected after the order. See [Artwork after checkout](/configuration/artwork-after-checkout).
+</ParamField>
 <ParamField path="locale" type="string">
   Locale for the widget UI, for example `en-US`.
 </ParamField>

@@ -1,0 +1,121 @@
+---
+title: "Artwork after checkout"
+description: "Let customers pay first and upload their artwork later, on your own branded upload page, where every file is checked and the proof approved."
+---
+
+Some customers are ready to pay before their file is ready. **Artwork after checkout** lets them buy first, then upload their artwork against the order on your own **upload page**. Each file is checked against its product's [Workflow](/configuration/workflows) and the proof is approved on that page, exactly as it would be before the cart.
+
+Nothing changes until you switch it on. Collecting artwork before **Add to cart** stays the default.
+
+## When artwork is collected
+
+Each product collects its artwork in one of three ways:
+
+| Setting | On the product page | After the order |
+| --- | --- | --- |
+| **At checkout** (default) | The upload is required. **Add to cart** waits for a file that passes. | Nothing extra. |
+| **Optional, or after checkout** | The upload is optional, with a note that customers can upload later. | Anything bought without a file is collected on your upload page. |
+| **After checkout only** | No upload, just a note: *Upload your artwork any time after checkout, using your order number.* | Every file is collected on your upload page. |
+
+Set a default for the whole store, then change it for any product. A business card can still need its file before the cart while a banner collects it after payment.
+
+## Set it up
+
+<Steps>
+  <Step title="Choose the store default">
+    Go to **Settings → Artwork after checkout** and pick **When To Collect Artwork**. Leave it on **At checkout** if only some products should collect artwork later.
+  </Step>
+  <Step title="Give your upload page an address">
+    Set **Upload Page Address**, for example `your-store`. Your page then lives at `upload.filecheck.io/your-store`. Use 3 to 48 lower-case letters, numbers and hyphens.
+  </Step>
+  <Step title="Brand the page">
+    Add your **Logo**, **Accent Colour**, **Store Website** (for the **Back to store** link) and **Support Email**. **Store Name** defaults to your shop's name. Click **Save Settings**.
+  </Step>
+  <Step title="Choose products (optional)">
+    To change one product, open **Workflows → Product Mappings**, click **Change** on the product and set **When to collect artwork** under the workflow. **Store Default (Settings)** follows the setting from step 1.
+  </Step>
+  <Step title="Put the link in your order emails">
+    Under **Link For Your Order Emails**, click **Copy link** and paste it into your store's order confirmation email. See [Getting the link to customers](#getting-the-link-to-customers).
+  </Step>
+</Steps>
+
+<Note>
+  On **WooCommerce** and **PrestaShop**, set the timing in the Filecheck plugin instead: store-wide in its settings and per product on the product's Filecheck tab. The plugin's setting decides both the product page and which order lines wait for artwork. See [WordPress / WooCommerce](/tutorials/wordpress-installation#artwork-after-checkout) and [PrestaShop](/tutorials/prestashop-installation#artwork-after-checkout).
+</Note>
+
+## The upload page
+
+Filecheck hosts the page, so it works with any cart. It shows only the items on the order that still need artwork, each with its own upload box, checks and file types.
+
+- **Your look:** your logo, store name and accent colour on a clean white page, with a **Back to store** link and your support email.
+- **Your message:** **Upload Page Message** replaces the standard line above the items, shown exactly as you write it. Leave it empty to show the standard message, translated into each customer's language.
+- **Their language:** the page and the upload box follow the customer's browser language. Add `?lang=de` (or any two-letter code) to a link to choose one.
+- **Progress:** a line shows how many items are ready for print, and each item shows its state: **Needs artwork**, **Checking**, **Needs attention**, **Proof ready to approve** or **Ready for print**.
+
+### How customers reach their order
+
+Customers never need an account. They either:
+
+- open `upload.filecheck.io/your-store?order=1001` and enter the **email address** they used at checkout (the order number is filled in from the link, with or without the `#`), or
+- open a **signed link** that goes straight to their order, from an email Filecheck or your store plugin sends.
+
+A wrong email and an unknown order number get the same answer, so the page never reveals whether an order exists, and repeated attempts are limited.
+
+### Proof approval after payment
+
+To have customers approve a proof on the upload page, use a Workflow with **Soft-proofing** switched on that **Starts After Customer approves soft-proof**. The item shows **Proof ready to approve** once its file is checked; the customer reviews and approves it there, and the order carries on to your [delivery](/configuration/workflows). With a Workflow that starts after the order is placed, the item goes straight to **Ready for print** once it passes.
+
+Customers can replace a file until they approve its proof. After that the job is locked, the same as an upload made before the cart.
+
+## Getting the link to customers
+
+| Cart | How the link reaches the customer |
+| --- | --- |
+| **Shopify** | Paste the copied link into **Settings → Notifications → Order confirmation**. Shopify fills in each order number with `{{ order.name \| url_encode }}`. |
+| **WooCommerce** | The Filecheck plugin adds an **Upload your artwork** block to WooCommerce's customer order emails, the order received page and **My Account**. |
+| **PrestaShop** | The Filecheck module shows the link on the order confirmation and order history pages, sends an **Upload your artwork** email, and fills `{filecheck_upload_link}` in any order email template. |
+| **Any other cart** | Send the order to the API and fetch each order's [signed upload link](/api-reference/orders/get-an-order-upload-link). See [For developers](#for-developers). |
+
+### Emails from Filecheck
+
+Filecheck can email customers for you too. In **Settings → Artwork after checkout**, switch on:
+
+- **Email: Upload Your Artwork**, sent when an order arrives that still needs artwork, with a signed link to it.
+- **Email: Proof Ready**, sent when a proof is ready to review on the upload page.
+
+Both are off by default. They go out through your own mail server when one is set in **Settings → Email**, otherwise through Filecheck's, as *Your Store via Filecheck*, with replies going to your **Support Email**. Choose **Built-in email** or one of your templates from **Library → Emails**; templates can use `{storeName}`, `{orderName}`, `{link}` and `{items}`.
+
+## Orders waiting for artwork
+
+**Orders → Awaiting artwork** lists every order with items that still need artwork, newest first. For each one you can **copy the link** to its upload page, or **send a reminder** when **Email: Upload Your Artwork** is on.
+
+Upload links work for 60 days. Signing in with the order number and email works for 90 days after the order.
+
+## For developers
+
+<AccordionGroup>
+  <Accordion title="The Element: artworkTiming">
+    `Filecheck.mount` and `FILECHECK_ELEMENT_CONFIG` take `artworkTiming`: `'checkout'` (default), `'either'` or `'after_order'`. With `'either'` or `'after_order'` the Element reports `status: 'idle'` with `canProceed: true` before any upload, so a gated **Add to cart** stays enabled. On Shopify the value comes from the product's settings automatically. See [Create & mount](/element/create-and-mount#create-options).
+  </Accordion>
+  <Accordion title="Orders from your own cart">
+    Send each paid order to [`POST /orders/{id}`](/api-reference/orders/capture-an-order). For every line bought without a file, add `"awaitArtwork": true` and the line's `workflowId`, and send the order number customers see as `orderName`:
+
+    ```json
+    {
+      "orderId": "5550001",
+      "orderName": "#1001",
+      "status": "processing",
+      "customer": { "email": "pat@example.com" },
+      "items": [
+        { "itemId": "1", "name": "Business cards", "quantity": 250, "jobId": "job_..." },
+        { "itemId": "2", "name": "Roll-up banner", "quantity": 1, "awaitArtwork": true, "workflowId": "wf_..." }
+      ]
+    }
+    ```
+
+    Then call [`GET /orders/{id}/upload-link`](/api-reference/orders/get-an-order-upload-link) and put the returned `url` in your order emails. It answers `404` when nothing on the order waits for artwork. Only send orders that are paid or committed (for example on hold for a bank transfer), so abandoned checkouts never get an upload page.
+  </Accordion>
+  <Accordion title="Jobs created on the upload page">
+    A job created on the upload page is linked to its order straight away, so [`GET /jobs?orderId=`](/server/verify-jobs) and your [webhooks](/server/webhooks) see it like any other order job. Its `metaData` carries `intakeChannel: "order_page"` and the order line's `itemId`.
+  </Accordion>
+</AccordionGroup>

@@ -248,10 +248,23 @@ const spec = {
       post: {
         tags: ['Orders'],
         summary: 'Capture an order',
-        description: 'Records a commerce order and links its line items (and their Filecheck `jobId`s) to the caller. Currently shaped for WooCommerce (`source: "wp"`).',
+        description: 'Records a commerce order and links its line items (and their Filecheck `jobId`s) to the caller. Shaped for WooCommerce (`source: "wp"`), OpenCart (`"oc"`) and PrestaShop (`"ps"`).\n\n**Artwork after checkout:** for a line bought without a file, send `awaitArtwork: true` and the line\'s `workflowId`, plus the order number customers see as `orderName`. Filecheck then keeps the order for the customer\'s [upload page](/configuration/artwork-after-checkout), and [`GET /orders/{id}/upload-link`](/api-reference/orders/get-an-order-upload-link) returns its signed link. Send only paid or committed orders. Sending the same order again is safe; jobs already uploaded for its lines are kept.',
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/OrderRequest' } } } },
-        responses: { '200': { description: 'Order captured' }, ...errorResponses },
+        responses: { '200': { description: 'Order captured', content: json('#/components/schemas/OrderResponse') }, ...errorResponses },
+      },
+    },
+    '/orders/{id}/upload-link': {
+      get: {
+        tags: ['Orders'],
+        summary: 'Get an order upload link',
+        description: 'The signed link to the order on your hosted [upload page](/configuration/artwork-after-checkout), where the customer uploads artwork after checkout for the lines that still need it, and approves proofs. Valid for 60 days; each call returns a fresh link. Put it in the order emails your store sends. `404` when no line of the order is waiting for artwork.',
+        parameters: [{ name: 'id', in: 'path', required: true, description: 'Your order id, as sent to `POST /orders/{id}`.', schema: { type: 'string' } }],
+        responses: {
+          '200': { description: 'OK', content: json('#/components/schemas/OrderUploadLink') },
+          '404': { description: 'No line of this order is waiting for artwork', content: json('#/components/schemas/Error') },
+          ...errorResponses,
+        },
       },
     },
     ...generatedPaths,
@@ -292,10 +305,39 @@ const spec = {
       OrderRequest: {
         type: 'object',
         properties: {
-          source: { type: 'string', enum: ['wp'], default: 'wp' },
-          orderId: { type: 'string' }, status: { type: 'string' }, currency: { type: 'string' }, total: {},
-          customer: { type: 'object', properties: { id: {}, email: { type: 'string' } } },
-          items: { type: 'array', items: { type: 'object', properties: { jobId: { type: 'string' }, itemId: {}, productId: {}, name: { type: 'string' }, quantity: {}, sku: { type: 'string' }, total: {} } } },
+          source: { type: 'string', enum: ['wp', 'oc', 'ps'], default: 'wp' },
+          orderId: { type: 'string' },
+          orderName: { type: 'string', description: 'The order number customers see, for example `#1001`. Customers type it on the upload page; a leading `#` is optional there.' },
+          orderNumber: { type: 'string' },
+          status: { type: 'string' }, currency: { type: 'string' }, total: {},
+          customer: { type: 'object', properties: { id: {}, email: { type: 'string', description: 'Customers sign in to the upload page with this address.' } } },
+          items: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                jobId: { type: ['string', 'null'], description: 'The Filecheck job uploaded for this line before checkout, if any.' },
+                itemId: { description: 'Your line id. Identifies the line on the upload page.' },
+                productId: {}, name: { type: 'string' }, quantity: {}, sku: { type: 'string' }, total: {},
+                awaitArtwork: { type: 'boolean', description: 'Artwork after checkout: this line was bought without a file and is collected on the upload page.' },
+                workflowId: { type: 'string', description: 'With `awaitArtwork`: the Workflow the line\'s artwork is checked against (`wf_…`).' },
+              },
+            },
+          },
+        },
+      },
+      OrderResponse: {
+        type: 'object',
+        properties: { success: { type: 'boolean' }, affectedJobIds: { type: 'array', items: { type: 'string' }, description: 'Jobs linked to the order by this call.' } },
+      },
+      OrderUploadLink: {
+        type: 'object',
+        properties: {
+          orderId: { type: 'string' },
+          url: { type: 'string', description: 'Signed link to the order on the upload page: `https://upload.filecheck.io/o/…`.' },
+          orderName: { type: 'string' },
+          status: { type: 'string', enum: ['awaiting', 'partial', 'complete'], description: 'Whether none, some or all of the waiting lines have artwork.' },
+          items: { type: 'array', items: { type: 'object', properties: { itemId: { type: 'string' }, name: { type: ['string', 'null'] }, quantity: {}, jobId: { type: ['string', 'null'] } } } },
         },
       },
       Step: {

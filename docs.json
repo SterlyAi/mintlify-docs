@@ -82,6 +82,7 @@
               },
               "configuration/upload-rules",
               "configuration/workflows",
+              "configuration/artwork-after-checkout",
               "configuration/jobs",
               "configuration/presets",
               "configuration/3d-scenes",
@@ -196,7 +197,8 @@
             "group": "Uploads & orders",
             "pages": [
               "POST /uploads",
-              "POST /orders/{id}"
+              "POST /orders/{id}",
+              "GET /orders/{id}/upload-link"
             ]
           },
           {

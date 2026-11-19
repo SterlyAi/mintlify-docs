@@ -3,6 +3,15 @@ title: "Changelog"
 description: "Notable changes to the Filecheck Element and API."
 ---
 
+<Update label="November 2026" description="Artwork after checkout">
+  - [Artwork after checkout](/configuration/artwork-after-checkout): customers can pay first and upload their artwork later, on your own branded upload page at `upload.filecheck.io/your-store`. Each file is checked against its product's Workflow and the proof is approved on the page.
+  - Choose per product, or for the whole store: **At checkout** (the default), **Optional, or after checkout**, or **After checkout only**.
+  - The upload page uses your logo, colour and message, and follows each customer's language. Customers sign in with their order number and email, or open a signed link.
+  - Links reach customers through Shopify's order confirmation email, the WooCommerce plugin (1.0.7) and the PrestaShop module (1.1.0), and optional **Upload your artwork** and **Proof ready** emails from Filecheck.
+  - **Orders → Awaiting artwork** lists orders still waiting, with copy link and reminder.
+  - API: [`POST /orders/{id}`](/api-reference/orders/capture-an-order) takes `awaitArtwork`, `workflowId` and `orderName`; new [`GET /orders/{id}/upload-link`](/api-reference/orders/get-an-order-upload-link). The Element gains `artworkTiming`.
+</Update>
+
 <Update label="September 2026" description="3D Proofs">
   - [3D Proofs](/concepts/3d-proofs): customers see and approve their artwork on the product (a 3D model, a folded leaflet, a booklet or a flat sheet) instead of on flat pages.
   - [3D Scenes](/configuration/3d-scenes) in the Library, built in the Scene Studio, with ready-made Store scenes for leaflets, booklets and sheets.

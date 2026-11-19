@@ -798,7 +798,7 @@
           "Orders"
         ],
         "summary": "Capture an order",
-        "description": "Records a commerce order and links its line items (and their Filecheck `jobId`s) to the caller. Currently shaped for WooCommerce (`source: \"wp\"`).",
+        "description": "Records a commerce order and links its line items (and their Filecheck `jobId`s) to the caller. Shaped for WooCommerce (`source: \"wp\"`), OpenCart (`\"oc\"`) and PrestaShop (`\"ps\"`).\n\n**Artwork after checkout:** for a line bought without a file, send `awaitArtwork: true` and the line's `workflowId`, plus the order number customers see as `orderName`. Filecheck then keeps the order for the customer's [upload page](/configuration/artwork-after-checkout), and [`GET /orders/{id}/upload-link`](/api-reference/orders/get-an-order-upload-link) returns its signed link. Send only paid or committed orders. Sending the same order again is safe; jobs already uploaded for its lines are kept.",
         "parameters": [
           {
             "name": "id",
@@ -821,7 +821,14 @@
         },
         "responses": {
           "200": {
-            "description": "Order captured"
+            "description": "Order captured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderResponse"
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error",
@@ -835,6 +842,68 @@
           },
           "401": {
             "description": "Missing or invalid key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders/{id}/upload-link": {
+      "get": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Get an order upload link",
+        "description": "The signed link to the order on your hosted [upload page](/configuration/artwork-after-checkout), where the customer uploads artwork after checkout for the lines that still need it, and approves proofs. Valid for 60 days; each call returns a fresh link. Put it in the order emails your store sends. `404` when no line of the order is waiting for artwork.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Your order id, as sent to `POST /orders/{id}`.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderUploadLink"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No line of this order is waiting for artwork",
             "content": {
               "application/json": {
                 "schema": {
@@ -5154,7 +5223,8 @@
               "convert",
               "upscale",
               "removebg",
-              "deliver"
+              "deliver",
+              "sanitize"
             ]
           },
           "step": {
@@ -6841,11 +6911,20 @@
           "source": {
             "type": "string",
             "enum": [
-              "wp"
+              "wp",
+              "oc",
+              "ps"
             ],
             "default": "wp"
           },
           "orderId": {
+            "type": "string"
+          },
+          "orderName": {
+            "type": "string",
+            "description": "The order number customers see, for example `#1001`. Customers type it on the upload page; a leading `#` is optional there."
+          },
+          "orderNumber": {
             "type": "string"
           },
           "status": {
@@ -6860,7 +6939,8 @@
             "properties": {
               "id": {},
               "email": {
-                "type": "string"
+                "type": "string",
+                "description": "Customers sign in to the upload page with this address."
               }
             }
           },
@@ -6870,9 +6950,15 @@
               "type": "object",
               "properties": {
                 "jobId": {
-                  "type": "string"
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "The Filecheck job uploaded for this line before checkout, if any."
                 },
-                "itemId": {},
+                "itemId": {
+                  "description": "Your line id. Identifies the line on the upload page."
+                },
                 "productId": {},
                 "name": {
                   "type": "string"
@@ -6881,7 +6967,78 @@
                 "sku": {
                   "type": "string"
                 },
-                "total": {}
+                "total": {},
+                "awaitArtwork": {
+                  "type": "boolean",
+                  "description": "Artwork after checkout: this line was bought without a file and is collected on the upload page."
+                },
+                "workflowId": {
+                  "type": "string",
+                  "description": "With `awaitArtwork`: the Workflow the line's artwork is checked against (`wf_…`)."
+                }
+              }
+            }
+          }
+        }
+      },
+      "OrderResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "affectedJobIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Jobs linked to the order by this call."
+          }
+        }
+      },
+      "OrderUploadLink": {
+        "type": "object",
+        "properties": {
+          "orderId": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "description": "Signed link to the order on the upload page: `https://upload.filecheck.io/o/…`."
+          },
+          "orderName": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "awaiting",
+              "partial",
+              "complete"
+            ],
+            "description": "Whether none, some or all of the waiting lines have artwork."
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "itemId": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "quantity": {},
+                "jobId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
               }
             }
           }
@@ -10101,6 +10258,111 @@
               }
             ]
           },
+          "geom.sheet_size": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Sheet size for roll and gang sheet products: a fixed width and any length up to a maximum (geom.page_size only accepts fixed sizes). Each page's finished size (the TrimBox when it has a usable one, else the page) is read either way round: one side must be width_mm within tolerance_mm, and the other side, the length, must fall within min_length_mm and max_length_mm. The width and length measured on page 1 are reported with the result, pass or fail (evaluation.measurements.sheet). No automatic repair.",
+            "properties": {
+              "id": {
+                "const": "geom.sheet_size",
+                "description": "The check id, 'geom.sheet_size'. Optional; must equal the key."
+              },
+              "enabled": {
+                "$ref": "#/components/schemas/Profile/definitions/ruleEnabled"
+              },
+              "severity": {
+                "enum": [
+                  "reject",
+                  "warn",
+                  "ignore"
+                ],
+                "default": "warn",
+                "description": "reject, warn or ignore. Omitted = warn. autofix is refused: this check has no repair, and an autofix finding would promise the customer a fix that never happens."
+              },
+              "autofixStrategy": {
+                "enum": [
+                  null
+                ],
+                "description": "Display label for the repair. No label exists for this check: leave it null or omit it."
+              },
+              "target": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "additionalProperties": false,
+                "description": "Settings for this check. Omitted fields use the defaults described on each field.",
+                "properties": {
+                  "width_mm": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "maximum": 100000,
+                    "description": "Sheet width in mm: the side that runs across the film or roll, e.g. 558.8 for 22 in DTF film. Required when the check is enabled."
+                  },
+                  "max_length_mm": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "exclusiveMinimum": 0,
+                    "maximum": 1000000,
+                    "description": "Longest accepted length in mm, e.g. 3048 for 120 in. null or omitted = no maximum. An order's context.artworkSize sets it to the chosen height_mm."
+                  },
+                  "min_length_mm": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "exclusiveMinimum": 0,
+                    "maximum": 1000000,
+                    "description": "Shortest accepted length in mm. null or omitted = no minimum. Leave it off for a billing minimum (a 3 in minimum charge is not a file defect)."
+                  },
+                  "tolerance_mm": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100,
+                    "default": 2,
+                    "description": "Slack in mm on the length limits (and, for PDFs, on the width). Default 2."
+                  }
+                }
+              },
+              "message": {
+                "$ref": "#/components/schemas/Profile/definitions/legacyMessage"
+              },
+              "friendlyMessage": {
+                "$ref": "#/components/schemas/Profile/definitions/legacyMessage"
+              }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "type": "object",
+                  "required": [
+                    "enabled"
+                  ],
+                  "properties": {
+                    "enabled": {
+                      "const": true
+                    }
+                  }
+                },
+                "then": {
+                  "type": "object",
+                  "required": [
+                    "target"
+                  ],
+                  "properties": {
+                    "target": {
+                      "type": "object",
+                      "required": [
+                        "width_mm"
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          },
           "geom.orientation": {
             "type": "object",
             "additionalProperties": false,
@@ -10696,7 +10958,7 @@
               },
               "rules": {
                 "type": "object",
-                "description": "The checks of this section, keyed by check id: geom.page_count, geom.page_size, geom.orientation, geom.bleed.required, geom.bleed.content_coverage, geom.trim.required, geom.safety_margin, geom.rotation, geom.consistent_page_sizes, geom.spread_vs_single. Any other key is refused. Omitted checks are off.",
+                "description": "The checks of this section, keyed by check id: geom.page_count, geom.page_size, geom.sheet_size, geom.orientation, geom.bleed.required, geom.bleed.content_coverage, geom.trim.required, geom.safety_margin, geom.rotation, geom.consistent_page_sizes, geom.spread_vs_single. Any other key is refused. Omitted checks are off.",
                 "propertyNames": {
                   "pattern": "^geom\\."
                 },
@@ -10707,6 +10969,9 @@
                   },
                   "geom.page_size": {
                     "$ref": "#/components/schemas/Profile/definitions/geom.page_size"
+                  },
+                  "geom.sheet_size": {
+                    "$ref": "#/components/schemas/Profile/definitions/geom.sheet_size"
                   },
                   "geom.orientation": {
                     "$ref": "#/components/schemas/Profile/definitions/geom.orientation"
@@ -13786,7 +14051,7 @@
           "raster.effective_dpi": {
             "type": "object",
             "additionalProperties": false,
-            "description": "Print resolution (keep raster.min_dimensions_px off when using this): the image's pixels divided by its print size in inches must reach min_dpi. The print size is target_width_mm/target_height_mm, else the size chosen on the order, else the workflow's Convert page size; with none of them the check does not run. The DPI written in the file header is never used. Autofix: upscales the image with AI until it reaches min_dpi at the print size.",
+            "description": "Print resolution (keep raster.min_dimensions_px off when using this): the image's pixels divided by its print size in inches must reach min_dpi. The print size is target_width_mm/target_height_mm, else the size chosen on the order, else the workflow's Convert page size; with none of them the check does not run. The DPI written in the file header is never used. With raster.sheet_size on, the print size is the sheet: pixels across / its width_mm, on the side that check reads as the width. Autofix: upscales the image with AI until it reaches min_dpi at the print size.",
             "properties": {
               "id": {
                 "const": "raster.effective_dpi",
@@ -13876,6 +14141,119 @@
                       "type": "object",
                       "required": [
                         "min_dpi"
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "raster.sheet_size": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Sheet length for image gang sheets: a fixed width (width_mm, the film) and any length up to a maximum. An image has no physical size, so the width is taken as given and the length is width_mm x the pixels along the sheet / the pixels across it. Which side runs across is read from the customer's answer (across), else the header resolution when it makes exactly one side measure width_mm (an orientation hint only), else the reading whose resolution is plausible next to raster.effective_dpi's min_dpi (300 when that check is off). When both readings are plausible the result says ambiguous, so the storefront can ask the customer. With this check on, raster.effective_dpi measures pixels across / width_mm on the same reading. The measured width, length and orientation are reported with the result, pass or fail (evaluation.measurements.sheet). No automatic repair.",
+            "properties": {
+              "id": {
+                "const": "raster.sheet_size",
+                "description": "The check id, 'raster.sheet_size'. Optional; must equal the key."
+              },
+              "enabled": {
+                "$ref": "#/components/schemas/Profile/definitions/ruleEnabled"
+              },
+              "severity": {
+                "enum": [
+                  "reject",
+                  "warn",
+                  "ignore"
+                ],
+                "default": "warn",
+                "description": "reject, warn or ignore. Omitted = warn. autofix is refused: this check has no repair, and an autofix finding would promise the customer a fix that never happens."
+              },
+              "autofixStrategy": {
+                "enum": [
+                  null
+                ],
+                "description": "Display label for the repair. No label exists for this check: leave it null or omit it."
+              },
+              "target": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "additionalProperties": false,
+                "description": "Settings for this check. Omitted fields use the defaults described on each field.",
+                "properties": {
+                  "width_mm": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "maximum": 100000,
+                    "description": "Sheet width in mm: the side that runs across the film or roll, e.g. 558.8 for 22 in DTF film. Required when the check is enabled."
+                  },
+                  "max_length_mm": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "exclusiveMinimum": 0,
+                    "maximum": 1000000,
+                    "description": "Longest accepted length in mm, e.g. 3048 for 120 in. null or omitted = no maximum. An order's context.artworkSize sets it to the chosen height_mm."
+                  },
+                  "min_length_mm": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "exclusiveMinimum": 0,
+                    "maximum": 1000000,
+                    "description": "Shortest accepted length in mm. null or omitted = no minimum. Leave it off for a billing minimum (a 3 in minimum charge is not a file defect)."
+                  },
+                  "tolerance_mm": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100,
+                    "default": 2,
+                    "description": "Slack in mm on the length limits (and, for PDFs, on the width). Default 2."
+                  },
+                  "across": {
+                    "enum": [
+                      "short",
+                      "long",
+                      null
+                    ],
+                    "description": "Which side of the image runs across the film, when the customer has said so: 'short' or 'long'. null or omitted = decided from the file. Normally set per order through context.sheet.across, not in the profile."
+                  }
+                }
+              },
+              "message": {
+                "$ref": "#/components/schemas/Profile/definitions/legacyMessage"
+              },
+              "friendlyMessage": {
+                "$ref": "#/components/schemas/Profile/definitions/legacyMessage"
+              }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "type": "object",
+                  "required": [
+                    "enabled"
+                  ],
+                  "properties": {
+                    "enabled": {
+                      "const": true
+                    }
+                  }
+                },
+                "then": {
+                  "type": "object",
+                  "required": [
+                    "target"
+                  ],
+                  "properties": {
+                    "target": {
+                      "type": "object",
+                      "required": [
+                        "width_mm"
                       ]
                     }
                   }
@@ -14211,6 +14589,58 @@
                 }
               }
             ]
+          },
+          "raster.transparent_background": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Transparent background, for DTF and other white-ink processes where anything opaque prints: fails when the image has no alpha channel, or when less than min_transparent_pct of its pixels are transparent (alpha 8/255 or lower), which catches a PNG saved with an alpha channel over a solid background. Coverage is measured on a downsample of at most about 4 megapixels. Images only. No automatic repair: removing a background changes the art. Unrelated to raster.transparency, which flags transparency on products that cannot print it.",
+            "properties": {
+              "id": {
+                "const": "raster.transparent_background",
+                "description": "The check id, 'raster.transparent_background'. Optional; must equal the key."
+              },
+              "enabled": {
+                "$ref": "#/components/schemas/Profile/definitions/ruleEnabled"
+              },
+              "severity": {
+                "enum": [
+                  "reject",
+                  "warn",
+                  "ignore"
+                ],
+                "default": "warn",
+                "description": "reject, warn or ignore. Omitted = warn. autofix is refused: this check has no repair, and an autofix finding would promise the customer a fix that never happens."
+              },
+              "autofixStrategy": {
+                "enum": [
+                  null
+                ],
+                "description": "Display label for the repair. No label exists for this check: leave it null or omit it."
+              },
+              "target": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "additionalProperties": false,
+                "description": "Settings for this check. Omitted fields use the defaults described on each field.",
+                "properties": {
+                  "min_transparent_pct": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100,
+                    "default": 1,
+                    "description": "Least share of transparent pixels, in percent. Default 1: any real gap between designs passes, a full background fails. 0 only requires an alpha channel."
+                  }
+                }
+              },
+              "message": {
+                "$ref": "#/components/schemas/Profile/definitions/legacyMessage"
+              },
+              "friendlyMessage": {
+                "$ref": "#/components/schemas/Profile/definitions/legacyMessage"
+              }
+            }
           },
           "raster.background_removal": {
             "type": "object",
@@ -14743,7 +15173,7 @@
               },
               "rules": {
                 "type": "object",
-                "description": "The checks of this section, keyed by check id: raster.format, raster.min_dimensions_px, raster.max_dimensions_px, raster.effective_dpi, raster.colorspace, raster.bit_depth, raster.transparency, raster.background_removal, raster.max_file_size, raster.icc_profile_required, raster.aspect_ratio, raster.stitch_set, raster.tac. Any other key is refused. Omitted checks are off.",
+                "description": "The checks of this section, keyed by check id: raster.format, raster.min_dimensions_px, raster.max_dimensions_px, raster.effective_dpi, raster.sheet_size, raster.colorspace, raster.bit_depth, raster.transparency, raster.transparent_background, raster.background_removal, raster.max_file_size, raster.icc_profile_required, raster.aspect_ratio, raster.stitch_set, raster.tac. Any other key is refused. Omitted checks are off.",
                 "propertyNames": {
                   "pattern": "^raster\\."
                 },
@@ -14761,6 +15191,9 @@
                   "raster.effective_dpi": {
                     "$ref": "#/components/schemas/Profile/definitions/raster.effective_dpi"
                   },
+                  "raster.sheet_size": {
+                    "$ref": "#/components/schemas/Profile/definitions/raster.sheet_size"
+                  },
                   "raster.colorspace": {
                     "$ref": "#/components/schemas/Profile/definitions/raster.colorspace"
                   },
@@ -14769,6 +15202,9 @@
                   },
                   "raster.transparency": {
                     "$ref": "#/components/schemas/Profile/definitions/raster.transparency"
+                  },
+                  "raster.transparent_background": {
+                    "$ref": "#/components/schemas/Profile/definitions/raster.transparent_background"
                   },
                   "raster.background_removal": {
                     "$ref": "#/components/schemas/Profile/definitions/raster.background_removal"
@@ -15799,9 +16235,10 @@
                           "autofix",
                           "convert",
                           "optimize",
-                          "split_pages"
+                          "split_pages",
+                          "sanitize"
                         ],
-                        "description": "What the step does. \"autofix\": applies the fixes the intake preflight planned for this file (the profile checks with severity \"autofix\": add bleed, convert to CMYK, upscale low-resolution images and so on); it is skipped when intake ran no preflight or found nothing to fix. If the upload rule already autofixes at intake (accept entry autofix on, without repreflight), keep this step disabled or the same fixes are applied a second time. \"convert\" (raster stream only): places the image on a new PDF page sized by config.dimension. \"optimize\": runs an optimize preset (config.presetId) over the PDF; on the raster stream it needs an enabled convert step before it, since it works on the converted PDF. \"split_pages\" (pdf stream only): writes one single-page PDF per page as extra outputs; the file that is delivered and downloaded stays the unsplit PDF."
+                        "description": "What the step does. \"sanitize\": removes active content before anything else runs: JavaScript, actions that run or launch something, attachments and forms in a PDF (printable form fields and annotations are flattened into the page so it prints the same), and hidden segments or data in a JPEG, PNG or TIFF. A file with nothing to remove is left untouched. \"autofix\": applies the fixes the intake preflight planned for this file (the profile checks with severity \"autofix\": add bleed, convert to CMYK, upscale low-resolution images and so on); it is skipped when intake ran no preflight or found nothing to fix. If the upload rule already autofixes at intake (accept entry autofix on, without repreflight), keep this step disabled or the same fixes are applied a second time. \"convert\" (raster stream only): places the image on a new PDF page sized by config.dimension. \"optimize\": runs an optimize preset (config.presetId) over the PDF; on the raster stream it needs an enabled convert step before it, since it works on the converted PDF. \"split_pages\" (pdf stream only): writes one single-page PDF per page as extra outputs; the file that is delivered and downloaded stays the unsplit PDF."
                       },
                       "enabled": {
                         "type": "boolean",
@@ -15820,7 +16257,7 @@
                       "config": {
                         "type": "object",
                         "default": {},
-                        "description": "Settings for this step type: autofix {}, convert { format, dimension, outputIntent, dpi }, optimize { presetId }, split_pages {}."
+                        "description": "Settings for this step type: sanitize {}, autofix {}, convert { format, dimension, outputIntent, dpi }, optimize { presetId }, split_pages {}."
                       }
                     },
                     "allOf": [
@@ -15843,6 +16280,29 @@
                               "additionalProperties": false,
                               "maxProperties": 0,
                               "description": "Autofix takes no settings: it applies exactly the fixes the intake preflight planned for the file, as defined by the checks with severity \"autofix\" in the preflight profile. Send {}."
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "if": {
+                          "type": "object",
+                          "required": [
+                            "type"
+                          ],
+                          "properties": {
+                            "type": {
+                              "const": "sanitize"
+                            }
+                          }
+                        },
+                        "then": {
+                          "properties": {
+                            "config": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "maxProperties": 0,
+                              "description": "Sanitize takes no settings: it is on or off. Send {}."
                             }
                           }
                         }
@@ -16132,7 +16592,7 @@
                       }
                     ]
                   },
-                  "description": "Steps run on each file of this kind, in this order, each on the previous step's output. Allowed types, in the order they must appear: pdf: autofix, optimize, split_pages. raster: autofix, convert, optimize. other: none. Each type at most once; leaving types out is fine. An empty list, or one with no enabled step, means files of this kind are delivered as they left intake."
+                  "description": "Steps run on each file of this kind, in this order, each on the previous step's output. Allowed types, in the order they must appear: pdf: sanitize, autofix, optimize, split_pages. raster: sanitize, autofix, convert, optimize. other: none. Each type at most once; leaving types out is fine. An empty list, or one with no enabled step, means files of this kind are delivered as they left intake."
                 }
               },
               "allOf": [
@@ -16150,11 +16610,12 @@
                   "then": {
                     "properties": {
                       "steps": {
-                        "maxItems": 3,
+                        "maxItems": 4,
                         "items": {
                           "properties": {
                             "type": {
                               "enum": [
+                                "sanitize",
                                 "autofix",
                                 "optimize",
                                 "split_pages"
@@ -16163,6 +16624,40 @@
                           }
                         },
                         "allOf": [
+                          {
+                            "if": {
+                              "minItems": 1,
+                              "items": [
+                                {
+                                  "type": "object",
+                                  "required": [
+                                    "type"
+                                  ],
+                                  "properties": {
+                                    "type": {
+                                      "const": "sanitize"
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            "then": {
+                              "items": [
+                                true,
+                                {
+                                  "properties": {
+                                    "type": {
+                                      "enum": [
+                                        "autofix",
+                                        "optimize",
+                                        "split_pages"
+                                      ]
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          },
                           {
                             "if": {
                               "minItems": 1,
@@ -16455,11 +16950,12 @@
                   "then": {
                     "properties": {
                       "steps": {
-                        "maxItems": 3,
+                        "maxItems": 4,
                         "items": {
                           "properties": {
                             "type": {
                               "enum": [
+                                "sanitize",
                                 "autofix",
                                 "convert",
                                 "optimize"
@@ -16468,6 +16964,97 @@
                           }
                         },
                         "allOf": [
+                          {
+                            "if": {
+                              "minItems": 1,
+                              "items": [
+                                {
+                                  "type": "object",
+                                  "required": [
+                                    "type"
+                                  ],
+                                  "properties": {
+                                    "type": {
+                                      "const": "sanitize"
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            "then": {
+                              "items": [
+                                true,
+                                {
+                                  "properties": {
+                                    "type": {
+                                      "enum": [
+                                        "autofix",
+                                        "convert",
+                                        "optimize"
+                                      ]
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "if": {
+                              "minItems": 4,
+                              "items": [
+                                true,
+                                true,
+                                true,
+                                {
+                                  "allOf": [
+                                    {
+                                      "type": "object",
+                                      "required": [
+                                        "type"
+                                      ],
+                                      "properties": {
+                                        "type": {
+                                          "const": "optimize"
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "not": {
+                                        "properties": {
+                                          "enabled": {
+                                            "const": false
+                                          }
+                                        },
+                                        "required": [
+                                          "enabled"
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            "then": {
+                              "items": [
+                                true,
+                                true,
+                                {
+                                  "properties": {
+                                    "type": {
+                                      "enum": [
+                                        "convert"
+                                      ]
+                                    },
+                                    "enabled": {
+                                      "enum": [
+                                        true
+                                      ]
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          },
                           {
                             "if": {
                               "minItems": 1,
