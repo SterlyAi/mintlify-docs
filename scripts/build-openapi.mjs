@@ -248,7 +248,7 @@ const spec = {
       post: {
         tags: ['Orders'],
         summary: 'Capture an order',
-        description: 'Records a commerce order and links its line items (and their Filecheck `jobId`s) to the caller. Shaped for WooCommerce (`source: "wp"`), OpenCart (`"oc"`) and PrestaShop (`"ps"`).\n\n**Artwork after checkout:** for a line bought without a file, send `awaitArtwork: true` and the line\'s `workflowId`, plus the order number customers see as `orderName`. Filecheck then keeps the order for the customer\'s [upload page](/configuration/artwork-after-checkout), and [`GET /orders/{id}/upload-link`](/api-reference/orders/get-an-order-upload-link) returns its signed link. Send only paid or committed orders. Sending the same order again is safe; jobs already uploaded for its lines are kept.',
+        description: 'Records a commerce order and links its line items (and their Filecheck `jobId`s) to the caller. Shaped for WooCommerce (`source: "wp"`), OpenCart (`"oc"`) and PrestaShop (`"ps"`).\n\n**Artwork after checkout:** for a line bought without a file, send `awaitArtwork: true` and the line\'s `workflowId`, plus the order number customers see as `orderName`. Filecheck then keeps the order for the customer\'s [upload page](https://filecheck.io/docs/configuration/artwork-after-checkout), and [`GET /orders/{id}/upload-link`](https://filecheck.io/docs/api-reference/orders/get-an-order-upload-link) returns its signed link. Send only paid or committed orders. Sending the same order again is safe; jobs already uploaded for its lines are kept.',
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/OrderRequest' } } } },
         responses: { '200': { description: 'Order captured', content: json('#/components/schemas/OrderResponse') }, ...errorResponses },
@@ -258,7 +258,7 @@ const spec = {
       get: {
         tags: ['Orders'],
         summary: 'Get an order upload link',
-        description: 'The signed link to the order on your hosted [upload page](/configuration/artwork-after-checkout), where the customer uploads artwork after checkout for the lines that still need it, and approves proofs. Valid for 60 days; each call returns a fresh link. Put it in the order emails your store sends. `404` when no line of the order is waiting for artwork.',
+        description: 'The signed link to the order on your hosted [upload page](https://filecheck.io/docs/configuration/artwork-after-checkout), where the customer uploads artwork after checkout for the lines that still need it, and approves proofs. Valid for 60 days; each call returns a fresh link. Put it in the order emails your store sends. `404` when no line of the order is waiting for artwork.',
         parameters: [{ name: 'id', in: 'path', required: true, description: 'Your order id, as sent to `POST /orders/{id}`.', schema: { type: 'string' } }],
         responses: {
           '200': { description: 'OK', content: json('#/components/schemas/OrderUploadLink') },
