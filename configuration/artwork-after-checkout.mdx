@@ -40,7 +40,7 @@ Set a default for the whole store, then change it for any product. A business ca
 </Steps>
 
 <Note>
-  On **WooCommerce** and **PrestaShop**, set the timing in the Filecheck plugin instead: store-wide in its settings and per product on the product's Filecheck tab. The plugin's setting decides both the product page and which order lines wait for artwork. See [WordPress / WooCommerce](/tutorials/wordpress-installation#artwork-after-checkout) and [PrestaShop](/tutorials/prestashop-installation#artwork-after-checkout).
+  On **WooCommerce**, **PrestaShop** and **Odoo**, set the timing in the Filecheck plugin instead: store-wide in its settings and per product on the product's Filecheck tab. The plugin's setting decides both the product page and which order lines wait for artwork. See [WordPress / WooCommerce](/tutorials/wordpress-installation#artwork-after-checkout), [PrestaShop](/tutorials/prestashop-installation#artwork-after-checkout) and [Odoo](/tutorials/odoo-installation#artwork-after-checkout).
 </Note>
 
 ## The upload page
@@ -74,6 +74,7 @@ Customers can replace a file until they approve its proof. After that the job is
 | **Shopify** | Paste the copied link into **Settings → Notifications → Order confirmation**. Shopify fills in each order number with `{{ order.name \| url_encode }}`. |
 | **WooCommerce** | The Filecheck plugin adds an **Upload your artwork** block to WooCommerce's customer order emails, the order received page and **My Account**. |
 | **PrestaShop** | The Filecheck module shows the link on the order confirmation and order history pages, sends an **Upload your artwork** email, and fills `{filecheck_upload_link}` in any order email template. |
+| **Odoo** | The Filecheck module shows the link on the order confirmation page and the customer's portal order page, and sends one **Upload your artwork** email from an editable email template. |
 | **Any other cart** | Send the order to the API and fetch each order's [signed upload link](/api-reference/orders/get-an-order-upload-link). See [For developers](#for-developers). |
 
 ### Emails from Filecheck

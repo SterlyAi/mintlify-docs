@@ -1,0 +1,47 @@
+---
+title: "Odoo"
+description: "How the Filecheck module for Odoo eCommerce mounts the Element, carries the job onto the sale order, and syncs orders and print files."
+---
+
+The Odoo module follows the same pattern as the other [store plugins](/integrations/woocommerce): the Element on the product page, **Add to cart** gated on `canProceed`, and the `jobId` persisted on the order. It differs in how the job reaches the cart, because Odoo's add-to-cart is a JSON call that posts none of the product page's own inputs. Merchants install it from the [Odoo installation guide](/tutorials/odoo-installation). The source is on [GitHub](https://github.com/PrintApp/filecheck-odoo).
+
+## Product page
+
+Above Odoo's quantity and **Add to cart** block, the module renders a mount point, its settings as JSON, and the per-key script:
+
+```html
+<div id="fc-slot-{productTemplateId}" class="o_filecheck_slot"></div>
+<script src="https://cdn.filecheck.io/element/{pk}/filecheck.js" async></script>
+```
+
+A small script then calls `Filecheck.mount` with the product's `workflowId`, `presentation`, `connectorId` and `artworkTiming`, and `cartButtonSelector: '#add_to_cart, .o_we_buy_now'`. Odoo's **Add to cart** and **Buy now** are links rather than buttons, so `mount()` can only mark them `aria-disabled` and `.filecheck-gated`; the module blocks clicks on gated links itself.
+
+## From the page to the order
+
+<Steps>
+  <Step title="Each status goes to the session">
+    On every `status` event the script posts the `jobId`, whether it can proceed, and the file names to the module's `/filecheck/save_job` JSON route, which keeps them in the Odoo session for that product. **Add to cart** stays gated until the save lands.
+  </Step>
+  <Step title="Add to cart copies the job onto the line">
+    When the product is added to the cart, a job that can proceed is copied onto the new sale order line, with the file names in the line description. Each uploaded file gets a cart line of its own.
+  </Step>
+  <Step title="Confirmation sends the order to Filecheck">
+    When the order is confirmed, the module sends it to [`POST /orders/{id}`](/api-reference/orders/capture-an-order) from a background job, with retries. Lines with a file carry their `jobId`. Lines of a Filecheck product without one carry `"awaitArtwork": true` and the product's `workflowId`, whatever the product's timing, since such a line exists only when the upload could not run. Cancelling the order sends its new status.
+  </Step>
+  <Step title="Print files are saved on the order">
+    Once a job has finished, the module reads its runs and downloads each run's `downloadUrl` (the corrected file, else the upload) as an attachment on the sale order. Those URLs are presigned and short-lived, so they are fetched fresh each time and never stored.
+  </Step>
+</Steps>
+
+For orders waiting for artwork, the module fetches [`GET /orders/{id}/upload-link`](/api-reference/orders/get-an-order-upload-link) for the confirmation page, the portal and the email. It asks again every 30 minutes for 60 days, and puts the jobs customers create on the upload page onto their order lines.
+
+## Settings
+
+Keys and defaults live on each Odoo website: publishable key, secret key (system administrators only, never sent to the storefront), `agentId`, default Workflow, artwork timing and presentation. Each product chooses off, the website's default Workflow, or a specific one, plus its own timing, presentation and [Connector](/element/connectors).
+
+Two System Parameters change the defaults:
+
+| Parameter | Default | Use |
+| --- | --- | --- |
+| `filecheck.api_url` | `https://api.filecheck.io` | Point the module at another API, for example a staging one. |
+| `filecheck.max_file_mb` | `512` | The largest print file saved on an order, in MB. |
