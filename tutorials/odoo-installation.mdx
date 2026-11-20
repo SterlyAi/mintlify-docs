@@ -5,9 +5,14 @@ description: "Install the Filecheck module on Odoo eCommerce, add your keys, and
 
 The Filecheck module puts the Element on your Odoo product pages, gates **Add to cart** until the file passes, and saves the print-ready files on the sale order. It works with Odoo **17 and 18** with the **eCommerce** app, self-hosted or on Odoo.sh.
 
-<Card title="Filecheck on the Odoo Apps Store" icon="store" href="https://apps.odoo.com/apps/modules/18.0/filecheck">
-  The official listing for Odoo 18. Free, LGPL-3.
-</Card>
+<CardGroup cols={2}>
+  <Card title="Odoo 18 on the Apps Store" icon="store" href="https://apps.odoo.com/apps/modules/18.0/filecheck">
+    The official listing for Odoo 18. Free, LGPL-3.
+  </Card>
+  <Card title="Odoo 17 on the Apps Store" icon="store" href="https://apps.odoo.com/apps/modules/17.0/filecheck">
+    The official listing for Odoo 17. Free, LGPL-3.
+  </Card>
+</CardGroup>
 
 <Note>
   Odoo Online (the SaaS at odoo.com) cannot install third-party modules. Use a self-hosted Odoo or Odoo.sh.
@@ -15,7 +20,7 @@ The Filecheck module puts the Element on your Odoo product pages, gates **Add to
 
 <Steps>
   <Step title="Install the module">
-    Download the module for your Odoo version from the [Odoo Apps Store](https://apps.odoo.com/apps/modules/18.0/filecheck) and extract the `filecheck` folder into your addons path. For Odoo 17, use the `17.0` branch of the [GitHub repository](https://github.com/PrintApp/filecheck-odoo/tree/17.0). On Odoo.sh, add the repository as a submodule on the branch that matches your Odoo version.
+    Download the module for your Odoo version from the Odoo Apps Store ([Odoo 18](https://apps.odoo.com/apps/modules/18.0/filecheck) or [Odoo 17](https://apps.odoo.com/apps/modules/17.0/filecheck)) and extract the `filecheck` folder into your addons path. On Odoo.sh, add the [GitHub repository](https://github.com/PrintApp/filecheck-odoo) as a submodule on the branch that matches your Odoo version (`18.0` or `17.0`).
 
     Restart Odoo, open **Apps**, click **Update Apps List**, search for **Filecheck** (remove the default **Apps** filter if it does not show), and click **Activate** on **Filecheck Print File Preflight**. It installs Odoo's eCommerce app too if you do not have it yet.
   </Step>
